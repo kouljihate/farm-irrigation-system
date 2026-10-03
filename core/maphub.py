@@ -5,6 +5,7 @@ in MongoDB; MapHub is a visualization/publishing target.
 """
 from __future__ import annotations
 
+import json
 import re
 from typing import Any
 
@@ -107,7 +108,7 @@ def _create_map(project_id: str) -> dict[str, Any]:
     }
     headers = {
         **_headers(),
-        "MapHub-API-Arg": __import__("json").dumps(args),
+        "MapHub-API-Arg": json.dumps(args),
     }
     return _request("map/upload", headers=headers)
 
