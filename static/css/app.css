@@ -1727,3 +1727,137 @@ pre { white-space: pre-wrap; word-break: break-all; }
   .map-fit-btn { margin-left: auto; }
   .map-summary { margin-left: auto; }
 }
+
+
+/* =========================================================
+   GLOBAL ACTION BUTTON DESIGN — application default
+   - same split design as Geometry/Sectors action buttons
+   - text block on the left: Arabic above English
+   - icon block on the right
+   - table buttons remain circular icon-only
+   ========================================================= */
+
+.btn:not(.btn-close):not(.icon-only):not(.table .btn),
+input[type="button"]:not(.table input),
+input[type="submit"]:not(.table input),
+input[type="reset"]:not(.table input) {
+  display: grid !important;
+  grid-template-columns: minmax(88px, 1fr) 42px;
+  align-items: stretch;
+  min-width: 118px;
+  min-height: 48px;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.app-btn-label {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+  line-height: 1.05;
+}
+
+.app-btn-label .ar {
+  order: 1;
+  display: block;
+  font-family: var(--font-ar);
+  font-size: 0.88rem;
+  font-weight: 700;
+  direction: rtl;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.app-btn-label .en {
+  order: 2;
+  display: block;
+  font-family: var(--font-en);
+  font-size: 0.62rem;
+  opacity: 0.78;
+  direction: ltr;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.app-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid currentColor;
+  background: rgba(45,106,79,0.07);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.btn:hover .app-btn-icon,
+input[type="button"]:hover::after,
+input[type="submit"]:hover::after,
+input[type="reset"]:hover::after {
+  background: rgba(45,106,79,0.14);
+}
+
+/* Compact variant keeps the same visual language. */
+.btn-sm:not(.btn-close):not(.icon-only) {
+  min-height: 42px;
+  min-width: 108px;
+  grid-template-columns: minmax(76px, 1fr) 36px;
+}
+
+.btn-sm .app-btn-label .ar {
+  font-size: 0.78rem;
+}
+
+.btn-sm .app-btn-label .en {
+  font-size: 0.56rem;
+}
+
+.btn-sm .app-btn-icon {
+  font-size: 1rem;
+}
+
+/* Never apply the split layout to table action buttons. */
+.table td .btn,
+.table th .btn,
+.table .row-actions .btn {
+  display: inline-flex !important;
+  grid-template-columns: none !important;
+}
+
+/* Geometry header keeps its dedicated, identical split design. */
+.map-action-btn {
+  border-radius: 10px !important;
+}
+
+/* Smaller layer checkboxes in the Geometry header. */
+.map-header-layers {
+  grid-template-columns: repeat(4, minmax(56px, 1fr));
+  min-width: 248px;
+  gap: 0.25rem;
+}
+
+.map-check {
+  min-height: 36px;
+  padding: 0.15rem 0.3rem;
+  border-radius: 8px;
+}
+
+.map-check-label .ar {
+  font-size: 0.68rem;
+}
+
+.map-check-label .en {
+  font-size: 0.48rem;
+}
+
+@media (max-width: 1200px) {
+  .map-header-layers {
+    min-width: 248px;
+  }
+}
