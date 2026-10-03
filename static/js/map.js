@@ -165,22 +165,22 @@
     if (event.layer) saveLayerGeometry(event.layer);
   });
 
-  if (cfg.autoLoad !== false) fetch(window.FARM_API.geojson)
-    .then(r => {
-      if (!r.ok) throw new Error("GeoJSON request failed");
-      return r.json();
-    })
-    .then(fc => {
-      clearLayers();
-      (fc.features || []).forEach(addGeoJSONFeature);
-      return fetch(window.FARM_API.bounds);
-    })
-    .then(r => r.json())
-    .then(d => {
-      if (d.bounds) map.fitBounds(d.bounds, {padding: [20, 20]});
-      map.invalidateSize(true);
-    })
-    .catch(err => showStatus("err", "Map load failed: " + err.message));
+  async function loadData() {
+    clearLayers();
+    const response = await fetch(window.FARM_API.geojson);
+    if (!response.ok) throw new Error("GeoJSON request failed");
+    const fc = await response.json();
+    (fc.features || []).forEach(addGeoJSONFeature);
+    const boundsResponse = await fetch(window.FARM_API.bounds);
+    const boundsData = await boundsResponse.json();
+    if (boundsData.bounds) map.fitBounds(boundsData.bounds, {padding: [20, 20]});
+    map.invalidateSize(true);
+    return fc;
+  }
+
+  if (cfg.autoLoad !== false) {
+    loadData().catch(err => showStatus("err", "Map load failed: " + err.message));
+  }
 
   const toggleBox = document.getElementById("layer-toggles");
   if (toggleBox) {
@@ -213,5 +213,5 @@
   }
 
   window.addEventListener("resize", () => map.invalidateSize(true));
-  window.FARM_MAP_INSTANCE = {map, layers, addGeoJSONFeature, clearLayers, saveLayerGeometry, fit: () => fetch(window.FARM_API.bounds).then(r => r.json()).then(d => { if (d.bounds) map.fitBounds(d.bounds, {padding:[20,20]}); })};
+  window.FARM_MAP_INSTANCE = {map, layers, addGeoJSONFeature, clearLayers, saveLayerGeometry, reload: loadData, fit: () => fetch(window.FARM_API.bounds).then(r => r.json()).then(d => { if (d.bounds) map.fitBounds(d.bounds, {padding:[20,20]}); })};
 })();
