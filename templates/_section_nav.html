@@ -2,9 +2,9 @@
   ('project.index',      'Project',    'المشروع',
     ['project.initial','project.water','project.settings','project.checks']),
   ('geometry.sectors',   'Geometry',   'الهندسة',
-    ['geometry.sectors','geometry.zones','geometry.valves']),
+    ['geometry.sectors','geometry.zones']),
   ('hydrology.mainline', 'Hydrology',  'الهيدرولوجيا',
-    ['hydrology.mainline','hydrology.submains','hydrology.manifold']),
+    ['hydrology.mainline','hydrology.submains','hydrology.valves']),
   ('field.rows',         'Field',      'الحقل',
     ['field.rows','field.trees','field.driplines']),
   ('export.bom',         'Export',     'التصدير',
@@ -28,18 +28,16 @@
   </ul>
 </nav>
 
-{% if request.endpoint in ['geometry.sectors', 'geometry.zones', 'geometry.valves'] %}
+{% if request.endpoint in ['geometry.sectors', 'geometry.zones'] %}
 <ul class="nav nav-tabs pt-2">
   <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='geometry.sectors' %}active{% endif %}" href="{{ url_for('geometry.sectors') }}"><span class="ar">القطاعات</span><span class="en">Sectors</span></a></li>
   <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='geometry.zones' %}active{% endif %}" href="{{ url_for('geometry.zones') }}"><span class="ar">المناطق</span><span class="en">Zones</span></a></li>
-  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='geometry.valves' %}active{% endif %}" href="{{ url_for('geometry.valves') }}"><span class="ar">الصمامات</span><span class="en">Valves</span></a></li>
-</ul>
-{% elif request.endpoint in ['hydrology.mainline', 'hydrology.submains', 'hydrology.manifold'] %}
+  </ul>
+{% elif request.endpoint in ['hydrology.mainline', 'hydrology.submains', 'hydrology.valves'] %}
 <ul class="nav nav-tabs pt-2">
   <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='hydrology.mainline' %}active{% endif %}" href="{{ url_for('hydrology.mainline') }}"><span class="ar">الخط الرئيسي</span><span class="en">Mainline</span></a></li>
   <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='hydrology.submains' %}active{% endif %}" href="{{ url_for('hydrology.submains') }}"><span class="ar">الخطوط الفرعية</span><span class="en">Sub-mains</span></a></li>
-  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='hydrology.manifold' %}active{% endif %}" href="{{ url_for('hydrology.manifold') }}"><span class="ar">المشعب</span><span class="en">Manifold</span></a></li>
-</ul>
+  </ul>
 {% elif request.endpoint in ['field.rows', 'field.trees', 'field.driplines'] %}
 <ul class="nav nav-tabs pt-2">
   <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='field.rows' %}active{% endif %}" href="{{ url_for('field.rows') }}"><span class="ar">الصفوف</span><span class="en">Rows</span></a></li>
