@@ -310,6 +310,37 @@
   </div>
 </div>
 
+<!-- ===================== INPUT MODAL ===================== -->
+<div class="modal fade" id="appInputModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title bi">
+          <span class="ar js-input-title-ar">إدخال</span>
+          <span class="en js-input-title-en">Input</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label bi w-100">
+          <span class="ar js-input-label-ar">القيمة</span>
+          <span class="en js-input-label-en">Value</span>
+        </label>
+        <input class="form-control js-input-value" type="text" autocomplete="off">
+        <textarea class="form-control js-input-textarea mt-2" rows="6" style="display:none;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-stack" data-bs-dismiss="modal">
+          <span class="ar">إلغاء</span><span class="en">Cancel</span>
+        </button>
+        <button type="button" class="btn btn-success btn-stack js-input-ok">
+          <span class="ar">تأكيد</span><span class="en">OK</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== ALERT MODAL ===================== -->
 <div class="modal fade" id="appAlertModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
