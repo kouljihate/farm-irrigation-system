@@ -274,7 +274,9 @@
   function refreshSelectionUI() {
     document.querySelectorAll("#sector-chips .zone-chip").forEach(chip => {
       const code = chip.getAttribute("data-sector");
-      chip.classList.toggle("selected", selectedSectors.has(code));
+      const selected = selectedSectors.has(code);
+      chip.classList.toggle("selected", selected);
+      chip.style.boxShadow = selected ? "0 0 0 3px rgba(13,110,253,.35)" : "none";
     });
   }
 
