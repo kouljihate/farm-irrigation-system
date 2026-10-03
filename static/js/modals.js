@@ -89,17 +89,18 @@
       delay:    5000
     }, opts || {});
 
-    // combine EN + AR in one line with a divider
-    const text = (o.bodyEn && o.bodyAr)
-      ? `${o.bodyEn} · ${o.bodyAr}`
-      : (o.bodyEn || o.bodyAr || "");
-
-    if (typeof window.showToast === "function") {
-      window.showToast(text, o.category, { delay: o.delay });
-    } else {
-      // No native browser dialogs: fail silently if the global toast helper is unavailable.
-      console.warn(text);
-    }
+    const modalEl = document.getElementById("appAlertModal");
+    if (!modalEl) return;
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modalEl.querySelector(".modal-title .en").textContent = o.titleEn || "Notice";
+    modalEl.querySelector(".modal-title .ar").textContent = o.titleAr || "تنبيه";
+    modalEl.querySelector(".modal-body .en").textContent = o.bodyEn || "";
+    modalEl.querySelector(".modal-body .ar").textContent = o.bodyAr || "";
+    modalEl.classList.toggle("danger", ["error", "danger"].includes(o.category));
+    const ok = modalEl.querySelector(".js-ok");
+    ok.querySelector(".en").textContent = "OK";
+    ok.querySelector(".ar").textContent = "حسناً";
+    modal.show();
   };
 
 
