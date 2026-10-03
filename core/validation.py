@@ -117,6 +117,49 @@ class SectorSplit(BaseModel):
         return v
 
 
+class ZoneAdd(BaseModel):
+    sector_code: str = Field(..., min_length=1, max_length=50)
+    name: str = Field(default="", max_length=100)
+    coords: str = Field(..., min_length=1)
+
+
+class ZoneRename(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    new_name: str = Field(..., min_length=1, max_length=100)
+
+
+class ZoneCodes(BaseModel):
+    names: str = Field(..., min_length=1, max_length=4000)
+
+    @field_validator("names")
+    @classmethod
+    def validate_names(cls, v: str) -> str:
+        names = [x.strip() for x in v.split(",") if x.strip()]
+        if not names:
+            raise ValueError("no zone names given")
+        if len(names) > 64:
+            raise ValueError("too many zones at once")
+        return ",".join(dict.fromkeys(names))
+
+
+class ZoneSwap(BaseModel):
+    first: str = Field(..., min_length=1, max_length=100)
+    second: str = Field(..., min_length=1, max_length=100)
+
+
+class ZoneSplit(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    parts: int = Field(default=2, ge=2, le=10)
+    split_mode: str = Field(default="contour")
+
+    @field_validator("split_mode")
+    @classmethod
+    def validate_split_mode(cls, v: str) -> str:
+        if v not in ("contour", "fan", "strip"):
+            raise ValueError(f"unknown split_mode: {v}")
+        return v
+
+
 class ZoneBuild(BaseModel):
     n_parts: int = Field(default=3, ge=1, le=20)
     offset: float = Field(default=0.0, ge=0)
