@@ -669,7 +669,7 @@
         row.querySelector(".js-area-m2").textContent = j.area_m2.toFixed(1);
         row.querySelector(".js-area-ha").textContent = j.area_ha.toFixed(4);
         setMsg(row, "✔ Saved", false);
-        loadAll();            // polygon changed -> refresh map + chips
+        sharedMap.reload().then(() => { window.setTimeout(paintChips, 100); });
         window.setTimeout(paintChips, 0);
       } catch (e) {
         setMsg(row, "❌ " + e.message, true);
