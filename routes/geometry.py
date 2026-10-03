@@ -27,6 +27,12 @@ from db.connection import get_db
 bp = Blueprint("geometry", __name__, url_prefix="/geometry")
 
 
+@bp.route("/")
+def index():
+    """Geometry landing page: Sectors is the default entry point."""
+    return redirect(url_for("geometry.sectors"))
+
+
 # ---------------------------------------------------------------- sectors
 @bp.route("/sectors")
 def sectors():
