@@ -610,6 +610,47 @@ def swap_zones(data: ZoneSwap):
     return jsonify({"ok": True, "revision_id": revision})
 
 
+@bp.route("/zones/merge", methods=["POST"])
+@validate_form(ZoneCodes)
+def merge_zones(data: ZoneCodes):
+    pid = session.get("project_id", "")
+    db = get_db()
+    names = data.names.split(",")
+    if len(names) < 2:
+        return jsonify({"ok": False, "error": "select at least 2 zones"}), 400
+    rows = list(db.zones.find({"project_id": pid, "name": {"$in": names}}))
+    if len(rows) != len(names):
+        return jsonify({"ok": False, "error": "one or more zones do not exist"}), 404
+    sectors = {r.get("sector_code") for r in rows}
+    if len(sectors) != 1:
+        return jsonify({"ok": False, "error": "zones must belong to the same sector"}), 409
+    sector_code = next(iter(sectors))
+    all_pts = []
+    for r in rows:
+        ring = first_ring(r.get("geom"))
+        if len(ring) < 3:
+            return jsonify({"ok": False, "error": f"{r.get('name')} has no usable geometry"}), 400
+        all_pts.append(Polygon(_to_local_xy(ring)[0]))
+    merged = clean_polygon(unary_union(all_pts))
+    if merged.is_empty or merged.geom_type != "Polygon":
+        return jsonify({"ok": False, "error": "zones must form one connected polygon"}), 409
+
+    # Use the first selected name as the stable identity.
+    keep = sorted(names)[0]
+    revision = repository.new_revision(pid, "04_zones",
+                                       f"Merge {', '.join(names)} -> {keep}")
+    now = datetime.now(timezone.utc)
+    ring0 = first_ring(rows[0].get("geom"))
+    _, lon0, lat0 = _to_local_xy(ring0)
+    ring_ll = _poly_ring_to_ll(merged, lon0, lat0)
+    area = _zone_store(pid, keep, sector_code, 1, ring_ll, revision, now)
+    drop = [n for n in names if n != keep]
+    repository.delete_where("zones", {"project_id": pid, "name": {"$in": drop}})
+    repository.delete_where("valves", {"project_id": pid, "zone_name": {"$in": names}})
+    return jsonify({"ok": True, "name": keep, "area_m2": area,
+                    "dropped": drop, "revision_id": revision})
+
+
 @bp.route("/zones/split", methods=["POST"])
 @validate_form(ZoneSplit)
 def split_zone(data: ZoneSplit):
