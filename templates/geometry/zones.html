@@ -11,15 +11,21 @@
 
   {# ================= LEFT: toolbar of zone actions, then map ================= #}
   <div class="workspace-main">
-    <div class="workspace-toolbar">
-      <span class="title bi">
-        <span class="en">Zone map</span><span class="ar">خريطة المناطق</span>
+    <div class="workspace-toolbar flex-wrap gap-1">
+      <span class="title bi me-1">
+        <span class="en">Zones</span><span class="ar">المناطق</span>
       </span>
-      <span class="vr"></span>
-
-      <button type="submit" form="build-form" class="btn btn-success btn-sm" id="build-btn">
-        🔨 <span class="en">Build zones</span><span class="ar">إنشاء المناطق</span>
+      <button class="btn btn-sm btn-outline-primary" id="zone-add" type="button">+ <span class="en">Add</span><span class="ar">إضافة</span></button>
+      <button class="btn btn-sm btn-outline-secondary" id="zone-rename" type="button">✎ <span class="en">Rename</span><span class="ar">إعادة تسمية</span></button>
+      <button class="btn btn-sm btn-outline-danger" id="zone-remove" type="button">− <span class="en">Remove</span><span class="ar">حذف</span></button>
+      <button class="btn btn-sm btn-outline-secondary" id="zone-swap" type="button">⇄ <span class="en">Swap</span><span class="ar">تبديل</span></button>
+      <button class="btn btn-sm btn-outline-secondary" id="zone-split" type="button">✂ <span class="en">Split</span><span class="ar">تقسيم</span></button>
+      <button class="btn btn-sm btn-outline-secondary" id="zone-merge" type="button">⊕ <span class="en">Merge</span><span class="ar">دمج</span></button>
+      <button class="btn btn-sm btn-success" id="zone-smart-split" type="button">✨ <span class="en">Smart Split</span><span class="ar">تقسيم ذكي</span></button>
+      <button type="submit" form="build-form" class="btn btn-sm btn-outline-success" id="build-btn">
+        🔨 <span class="en">Build all</span><span class="ar">بناء الكل</span>
       </button>
+      <span class="vr"></span>
       <button class="btn btn-outline-secondary btn-sm" id="fit-btn" type="button">
         <span class="en">Fit map</span><span class="ar">ملاءمة</span>
       </button>
@@ -138,7 +144,7 @@
       <div class="side-body">
         <div class="zone-chips" id="zone-chips">
           {% for z in zones %}
-          <div class="zone-chip z{{ (loop.index0 % 3) + 1 }}">
+          <div class="zone-chip z{{ (loop.index0 % 3) + 1 }}" data-zone="{{ z.name }}" data-sector="{{ z.sector }}">
             <span>{{ z.name }}</span>
             <span class="area">{{ "%.1f"|format(z.area_m2) }} m²</span>
           </div>
@@ -161,8 +167,43 @@
     geojson: "{{ url_for('api.geojson') }}",
     zones:   "{{ url_for('api.zones') }}",
     bounds:  "{{ url_for('api.bounds') }}",
-    build:   "{{ url_for('geometry.build_zones_api') }}"
+    build:   "{{ url_for('geometry.build_zones_api') }}",
+    add:     "{{ url_for('geometry.add_zone') }}",
+    rename:  "{{ url_for('geometry.rename_zone') }}",
+    remove:  "{{ url_for('geometry.delete_zones') }}",
+    swap:    "{{ url_for('geometry.swap_zones') }}",
+    split:   "{{ url_for('geometry.split_zone') }}",
+    smart:   "{{ url_for('geometry.smart_split_zones') }}"
   };
+
+  const selectedZones = new Set();
+
+  function selectedZoneNames() { return Array.from(selectedZones); }
+  function refreshZoneSelection() {
+    document.querySelectorAll("#zone-chips .zone-chip").forEach(chip => {
+      chip.classList.toggle("selected", selectedZones.has(chip.dataset.zone));
+    });
+  }
+  function postZone(url, fields) {
+    const fd = new FormData();
+    Object.entries(fields).forEach(([k,v]) => fd.append(k,v));
+    return fetch(url, {method:"POST", body:fd}).then(async r => {
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || "operation failed");
+      return j;
+    });
+  }
+  function zoneOp(url, fields, msg) {
+    postZone(url, fields).then(j => {
+      selectedZones.clear();
+      document.getElementById("build-status").className = "zones-status ok";
+      document.getElementById("build-status").textContent = "✔ " + msg(j);
+      setTimeout(() => window.location.reload(), 250);
+    }).catch(e => {
+      document.getElementById("build-status").className = "zones-status err";
+      document.getElementById("build-status").textContent = "⚠️ " + e.message;
+    });
+  }
 
   // -------- init map --------
   const map = L.map("zones-map").setView([33.8455, -4.5860], 15);
@@ -425,6 +466,74 @@
     fetch(API.bounds)
       .then(r => r.json())
       .then(d => { if (d.bounds) map.fitBounds(d.bounds, { padding: [20, 20] }); });
+  });
+
+  // -------- zone toolbar actions --------
+  document.querySelectorAll("#zone-chips .zone-chip").forEach(chip => {
+    chip.addEventListener("click", e => {
+      const name = chip.dataset.zone;
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        if (selectedZones.has(name)) selectedZones.delete(name); else selectedZones.add(name);
+      } else {
+        selectedZones.clear(); selectedZones.add(name);
+      }
+      refreshZoneSelection();
+    });
+  });
+
+  document.getElementById("zone-add").addEventListener("click", () => {
+    const sector = (prompt("Sector code:", "") || "").trim();
+    if (!sector) return;
+    const name = (prompt("Zone name (optional):", sector + "-Z") || "").trim();
+    const coords = prompt("Polygon coordinates, one lon,lat per line:", "");
+    if (!coords) return;
+    zoneOp(API.add, {sector_code: sector, name, coords}, j => "Added " + j.name);
+  });
+
+  document.getElementById("zone-rename").addEventListener("click", () => {
+    const n = selectedZoneNames();
+    if (n.length !== 1) { alert("Select exactly one zone."); return; }
+    const next = (prompt("New zone name:", n[0]) || "").trim();
+    if (!next) return;
+    zoneOp(API.rename, {name:n[0], new_name:next}, j => "Renamed to " + j.name);
+  });
+
+  document.getElementById("zone-remove").addEventListener("click", () => {
+    const n = selectedZoneNames();
+    if (!n.length) { alert("Select at least one zone."); return; }
+    if (!confirm("Remove " + n.join(", ") + "?")) return;
+    zoneOp(API.remove, {names:n.join(",")}, j => "Removed " + j.removed + " zone(s)");
+  });
+
+  document.getElementById("zone-swap").addEventListener("click", () => {
+    const n = selectedZoneNames();
+    if (n.length !== 2) { alert("Select exactly two zones."); return; }
+    zoneOp(API.swap, {first:n[0], second:n[1]}, () => "Swapped zone identities");
+  });
+
+  document.getElementById("zone-split").addEventListener("click", () => {
+    const n = selectedZoneNames();
+    if (n.length !== 1) { alert("Select exactly one zone."); return; }
+    const parts = parseInt(prompt("Number of parts (2-10):","2") || "2",10);
+    if (!Number.isInteger(parts) || parts < 2 || parts > 10) return;
+    const mode = prompt("Split mode: contour, fan, or strip","contour") || "contour";
+    zoneOp(API.split, {name:n[0], parts, split_mode:mode}, j => "Split into " + j.created.length + " zones");
+  });
+
+  document.getElementById("zone-merge").addEventListener("click", () => {
+    const n = selectedZoneNames();
+    if (n.length < 2) { alert("Select at least two zones."); return; }
+    alert("Zone merge requires a shared sector and is intentionally conservative. Use Smart Split after changing the sector geometry.");
+  });
+
+  document.getElementById("zone-smart-split").addEventListener("click", () => {
+    const n = selectedZoneNames();
+    if (n.length !== 1) { alert("Select one zone belonging to the sector to split."); return; }
+    const chip = document.querySelector('#zone-chips .zone-chip[data-zone="' + CSS.escape(n[0]) + '"]');
+    const sector = chip ? chip.dataset.sector : "";
+    if (!sector) { alert("The selected zone has no sector reference."); return; }
+    if (!confirm("Smart Split will rebuild all zones in sector " + sector + " using the configured 3-zone target. Continue?")) return;
+    zoneOp(API.smart, {sector_code:sector}, j => "Smart Split created " + j.zones + " zones");
   });
 
   // -------- initial load --------
