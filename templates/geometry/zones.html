@@ -159,6 +159,9 @@
 {% endblock %}
 
 {% block scripts %}
+<script>window.FARM_API = {geojson:"{{ url_for('api.geojson') }}", bounds:"{{ url_for('api.bounds') }}", geometryBase:"{{ url_for('api.update_geometry', collection='COLLECTION', object_id='OBJECT_ID') }}"};</script>
+<script>window.FARM_MAP_CONFIG = {containerId:"zones-map", statusId:"build-status", autoLoad:false};</script>
+<script src="{{ url_for('static', filename='js/map.js', v='13') }}"></script>
 <script>
 (function () {
   "use strict";
@@ -209,22 +212,17 @@
   }
 
   // -------- init map --------
-  const mapContainer = document.getElementById("zones-map");
-  if (!mapContainer) throw new Error("Map container not found: zones-map");
-  mapContainer.style.minHeight = "650px";
-  const map = L.map(mapContainer, {zoomControl: true, attributionControl: true}).setView([33.8455, -4.5860], 15);
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 20, attribution: "© OpenStreetMap"
-  }).addTo(map);
-
+  const sharedMap = window.FARM_MAP_INSTANCE;
+  if (!sharedMap) throw new Error("Shared Farm Map failed to initialize");
+  const map = sharedMap.map;
   const layers = {
-    property: L.layerGroup().addTo(map),
-    sectors:  L.layerGroup().addTo(map),
-    zones:    L.layerGroup().addTo(map)
+    property: sharedMap.layers.property,
+    sectors: sharedMap.layers.sectors,
+    zones: sharedMap.layers.zones
   };
 
-    const colors = {
+
+  const colors = {
     property: "#000000"
   };
 
