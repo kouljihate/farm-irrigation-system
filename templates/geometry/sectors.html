@@ -454,14 +454,18 @@
       .then(d => { if (d.bounds) map.fitBounds(d.bounds, { padding: [20, 20] }); });
   }
 
-  // Geoman is the common editor for geometry pages.
-  map.pm.setGlobalOptions({snappable: true, snapDistance: 20});
-  map.pm.addControls({
-    position: "topleft",
-    drawMarker: false, drawCircleMarker: false, drawPolyline: false,
-    drawRectangle: false, drawPolygon: false, drawCircle: false, drawText: false,
-    editMode: true, dragMode: true, cutPolygon: false, removalMode: false, rotateMode: false
-  });
+  // Geoman is optional at startup: the map must still render if the CDN is unavailable.
+  if (map.pm) {
+    map.pm.setGlobalOptions({snappable: true, snapDistance: 20});
+    map.pm.addControls({
+      position: "topleft",
+      drawMarker: false, drawCircleMarker: false, drawPolyline: false,
+      drawRectangle: false, drawPolygon: false, drawCircle: false, drawText: false,
+      editMode: true, dragMode: true, cutPolygon: false, removalMode: false, rotateMode: false
+    });
+  } else {
+    console.warn("Leaflet-Geoman is not available; map editing controls are disabled.");
+  }
 
   async function saveGeomanLayer(layer) {
     const p = layer.feature && layer.feature.properties;
@@ -494,14 +498,20 @@
   function loadAll() {
     clearLayers();
     fetch(API.geojson)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error("GeoJSON API returned HTTP " + r.status);
+        return r.json();
+      })
       .then(fc => {
         renderFeatures(fc.features || []);
         refreshMapSize();
         fitToBounds();
         window.setTimeout(refreshMapSize, 300);
       })
-      .catch(err => console.error("load failed:", err));
+      .catch(err => {
+        console.error("load failed:", err);
+        showStatus("err", "⚠️ Map data failed to load: " + err.message);
+      });
   }
 
   // -------- chips: colour + click-to-zoom + hover highlight --------
@@ -556,12 +566,6 @@
   document.getElementById("fit-btn").addEventListener("click", fitToBounds);
 
   // Leaflet needs a size refresh after the workspace layout is painted.
-  function refreshMapSize() {
-    window.requestAnimationFrame(() => {
-      map.invalidateSize(true);
-      window.setTimeout(() => map.invalidateSize(true), 150);
-    });
-  }
   window.addEventListener("resize", refreshMapSize);
 
   // ================= coordinate editor (unchanged behaviour) =================
