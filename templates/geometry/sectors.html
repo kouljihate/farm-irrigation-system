@@ -11,16 +11,21 @@
   {# ================= LEFT: toolbar of map actions, then map, then the
      coordinate editor (the sector-specific tool) ================= #}
   <div class="workspace-main">
-    <div class="workspace-toolbar">
-      <span class="title bi">
-        <span class="en">Sector map</span><span class="ar">خريطة القطاعات</span>
+    <div class="workspace-toolbar flex-wrap gap-1">
+      <span class="title bi me-1">
+        <span class="en">Sectors</span><span class="ar">القطاعات</span>
       </span>
+      <button class="btn btn-sm btn-outline-primary" id="sector-add" type="button">+ <span class="en">Add</span><span class="ar">إضافة</span></button>
+      <button class="btn btn-sm btn-outline-secondary" id="sector-rename" type="button">✎ <span class="en">Rename</span><span class="ar">إعادة تسمية</span></button>
+      <button class="btn btn-sm btn-outline-danger" id="sector-remove" type="button">− <span class="en">Remove</span><span class="ar">حذف</span></button>
+      <button class="btn btn-sm btn-outline-secondary" id="sector-swap" type="button">⇄ <span class="en">Swap</span><span class="ar">تبديل</span></button>
+      <button class="btn btn-sm btn-outline-secondary" id="sector-split" type="button">✂ <span class="en">Split</span><span class="ar">تقسيم</span></button>
+      <button class="btn btn-sm btn-outline-secondary" id="sector-merge" type="button">⊕ <span class="en">Merge</span><span class="ar">دمج</span></button>
+      <button class="btn btn-sm btn-success" id="sector-smart-create" type="button">✨ <span class="en">Smart Create</span><span class="ar">إنشاء ذكي</span></button>
       <span class="vr"></span>
-
       <button class="btn btn-outline-secondary btn-sm" id="fit-btn" type="button">
         <span class="en">Fit map</span><span class="ar">ملاءمة</span>
       </button>
-
       <span class="vr"></span>
 
       <div class="btn-group btn-group-sm" role="group" aria-label="Map layers">
@@ -169,7 +174,14 @@
   const API = {
     geojson: "{{ url_for('api.geojson') }}",
     bounds:  "{{ url_for('api.bounds') }}",
-    save:    "{{ url_for('geometry.save_sector') }}"
+    save:    "{{ url_for('geometry.save_sector') }}",
+    add:     "{{ url_for('geometry.add_sector') }}",
+    remove:  "{{ url_for('geometry.delete_sectors') }}",
+    rename:  "{{ url_for('geometry.rename_sector') }}",
+    swap:    "{{ url_for('geometry.swap_sectors') }}",
+    split:   "{{ url_for('geometry.split_sector') }}",
+    merge:   "{{ url_for('geometry.merge_sectors') }}",
+    smart:   "{{ url_for('geometry.smart_create_sectors') }}"
   };
 
   const R = 6378137.0;
@@ -253,6 +265,48 @@
 
   /* code -> {layer, bounds} so chips can zoom and highlight */
   const sectorIndex = {};
+  const selectedSectors = new Set();
+
+  function selectedCodes() {
+    return Array.from(selectedSectors);
+  }
+
+  function refreshSelectionUI() {
+    document.querySelectorAll("#sector-chips .zone-chip").forEach(chip => {
+      const code = chip.getAttribute("data-sector");
+      chip.classList.toggle("selected", selectedSectors.has(code));
+    });
+  }
+
+  function requireSelection(n, label) {
+    const codes = selectedCodes();
+    if (codes.length !== n) {
+      alert(label + ": select exactly " + n + " sector" + (n === 1 ? "" : "s") + ".");
+      return null;
+    }
+    return codes;
+  }
+
+  function postForm(url, fields) {
+    const fd = new FormData();
+    Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+    return fetch(url, {method: "POST", body: fd}).then(async r => {
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || "operation failed");
+      return j;
+    });
+  }
+
+  function runSectorOperation(url, fields, successMessage) {
+    postForm(url, fields)
+      .then(j => {
+        selectedSectors.clear();
+        if (successMessage) showStatus("ok", successMessage(j));
+        loadAll();
+        setTimeout(paintChips, 100);
+      })
+      .catch(err => showStatus("err", "⚠️ " + err.message));
+  }
 
   const mapErrors = [];
   const statusEl = document.getElementById("map-status");
@@ -381,7 +435,15 @@
         const rec = sectorIndex[code];
         if (rec) rec.poly.setStyle({ weight: 2 });
       });
-      chip.addEventListener("click", () => {
+      chip.addEventListener("click", (e) => {
+        if (e.ctrlKey || e.metaKey || e.shiftKey) {
+          if (selectedSectors.has(code)) selectedSectors.delete(code);
+          else selectedSectors.add(code);
+        } else {
+          selectedSectors.clear();
+          selectedSectors.add(code);
+        }
+        refreshSelectionUI();
         const rec = sectorIndex[code];
         if (rec) map.fitBounds(rec.bounds, { padding: [24, 24] });
       });
@@ -511,6 +573,62 @@
         window.location.reload();
       }
     });
+  });
+
+  // -------- sector toolbar actions --------
+  document.getElementById("sector-add").addEventListener("click", () => {
+    const code = (prompt("Sector code (optional):", "") || "").trim();
+    const coords = prompt("Polygon coordinates, one lon,lat per line:", "");
+    if (!coords) return;
+    runSectorOperation(API.add, {code, coords}, j => "✔ Added " + j.code);
+  });
+
+  document.getElementById("sector-rename").addEventListener("click", () => {
+    const codes = requireSelection(1, "Rename");
+    if (!codes) return;
+    const next = (prompt("New sector code:", codes[0]) || "").trim();
+    if (!next) return;
+    runSectorOperation(API.rename, {code: codes[0], new_code: next},
+      j => "✔ Renamed to " + j.code);
+  });
+
+  document.getElementById("sector-remove").addEventListener("click", () => {
+    const codes = selectedCodes();
+    if (!codes.length) { alert("Select at least one sector."); return; }
+    if (!confirm("Remove " + codes.join(", ") + "? Dependent zones/valves will be removed.")) return;
+    runSectorOperation(API.remove, {codes: codes.join(","), cascade: "1"},
+      j => "✔ Removed " + j.removed + " sector(s)");
+  });
+
+  document.getElementById("sector-swap").addEventListener("click", () => {
+    const codes = requireSelection(2, "Swap");
+    if (!codes) return;
+    runSectorOperation(API.swap, {first: codes[0], second: codes[1]},
+      () => "✔ Swapped sector identities");
+  });
+
+  document.getElementById("sector-split").addEventListener("click", () => {
+    const codes = requireSelection(1, "Split");
+    if (!codes) return;
+    const parts = parseInt(prompt("Number of parts (2-10):", "2") || "2", 10);
+    if (!Number.isInteger(parts) || parts < 2 || parts > 10) return;
+    const mode = prompt("Split mode: contour, fan, or strip", "contour") || "contour";
+    runSectorOperation(API.split, {code: codes[0], parts, split_mode: mode},
+      j => "✔ Split " + j.source + " into " + j.parts);
+  });
+
+  document.getElementById("sector-merge").addEventListener("click", () => {
+    const codes = selectedCodes();
+    if (codes.length < 2) { alert("Select at least two sectors."); return; }
+    if (!confirm("Merge " + codes.join(", ") + "?")) return;
+    runSectorOperation(API.merge, {codes: codes.join(","), cascade: "1"},
+      j => "✔ Merged into " + j.code);
+  });
+
+  document.getElementById("sector-smart-create").addEventListener("click", () => {
+    if (!confirm("Smart Create will replace existing sectors and clear derived zones, valves and pipes. Continue?")) return;
+    runSectorOperation(API.smart, {}, j =>
+      "✔ Smart Create: " + j.sectors + " sectors (" + j.strategy + ")");
   });
 
   // -------- initial load --------
