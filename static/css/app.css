@@ -1536,3 +1536,194 @@ pre { white-space: pre-wrap; word-break: break-all; }
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+
+/* =========================================================
+   GEOMETRY MAP HEADER
+   - left: seven sector action buttons
+   - right: four layer checkboxes
+   - action buttons: text block on the left, icon block on the right
+   ========================================================= */
+.map-header {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  background: #f0f3f6;
+  border-bottom: 1px solid #e3e6ea;
+  min-width: 0;
+}
+
+.map-header-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.map-action-btn {
+  display: grid !important;
+  grid-template-columns: minmax(72px, 1fr) 42px;
+  align-items: stretch;
+  min-width: 118px;
+  min-height: 48px;
+  padding: 0 !important;
+  border: 1px solid currentColor;
+  border-radius: 10px !important;
+  background: #fff;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.map-action-btn .map-action-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.25rem 0.45rem;
+  text-align: center;
+  line-height: 1.05;
+}
+
+.map-action-btn .map-action-label .ar {
+  order: 1;
+  display: block;
+  font-family: var(--font-ar);
+  font-size: 0.88rem;
+  font-weight: 700;
+  direction: rtl;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.map-action-btn .map-action-label .en {
+  order: 2;
+  display: block;
+  font-family: var(--font-en);
+  font-size: 0.62rem;
+  opacity: 0.78;
+  direction: ltr;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.map-action-btn .map-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid currentColor;
+  background: rgba(45,106,79,0.07);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.map-action-btn:hover .map-action-icon {
+  background: rgba(45,106,79,0.14);
+}
+
+.map-header-layers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(82px, 1fr));
+  align-items: stretch;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  min-width: 350px;
+}
+
+.map-check {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin: 0;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #cfe6dd;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+}
+
+.map-check input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.map-check-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
+}
+
+.map-check-label .ar {
+  font-family: var(--font-ar);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.map-check-label .en {
+  font-family: var(--font-en);
+  font-size: 0.58rem;
+  opacity: 0.75;
+  text-align: center;
+}
+
+.map-check:has(input:checked) {
+  background: #e8f5ee;
+  border-color: var(--brand-green);
+  color: var(--brand-green-dark);
+  box-shadow: inset 0 0 0 1px var(--brand-green);
+}
+
+.map-fit-btn {
+  flex: 0 0 44px;
+  align-self: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #adb5bd;
+  border-radius: 50% !important;
+  background: #fff;
+  color: #495057;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.map-fit-btn:hover {
+  background: #f8f9fa;
+  color: var(--brand-green);
+}
+
+.map-summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  min-width: 86px;
+  font-size: 0.68rem;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
+  .map-header { flex-wrap: wrap; }
+  .map-header-actions { flex: 1 1 100%; overflow-x: auto; }
+  .map-header-layers { flex: 1 1 auto; min-width: 0; }
+}
+
+@media (max-width: 768px) {
+  .map-header-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .map-action-btn { min-width: 0; width: 100%; }
+  .map-header-layers { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .map-fit-btn { margin-left: auto; }
+  .map-summary { margin-left: auto; }
+}
