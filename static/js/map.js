@@ -2,7 +2,8 @@
 (function () {
   "use strict";
 
-  const map = L.map("map").setView([33.8455, -4.5860], 15);
+  const cfg = window.FARM_MAP_CONFIG || {};
+  const map = L.map(cfg.containerId || "map").setView([33.8455, -4.5860], 15);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 20,
@@ -37,7 +38,7 @@
     manifolds: "#ff9800"
   };
 
-  const status = document.getElementById("map-edit-status");
+  const status = document.getElementById(cfg.statusId || "map-edit-status");
 
   function showStatus(kind, text) {
     if (!status) return;
@@ -164,7 +165,7 @@
     if (event.layer) saveLayerGeometry(event.layer);
   });
 
-  fetch(window.FARM_API.geojson)
+  if (cfg.autoLoad !== false) fetch(window.FARM_API.geojson)
     .then(r => {
       if (!r.ok) throw new Error("GeoJSON request failed");
       return r.json();
@@ -212,4 +213,5 @@
   }
 
   window.addEventListener("resize", () => map.invalidateSize(true));
+  window.FARM_MAP_INSTANCE = {map, layers, addGeoJSONFeature, clearLayers, saveLayerGeometry, fit: () => fetch(window.FARM_API.bounds).then(r => r.json()).then(d => { if (d.bounds) map.fitBounds(d.bounds, {padding:[20,20]}); })};
 })();
