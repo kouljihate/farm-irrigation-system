@@ -13,11 +13,11 @@ from shapely.geometry import LineString, Polygon
 from shapely.ops import unary_union
 
 from core.async_tasks import get_project_tasks, get_task_status, submit_async_task
-from core.geometry import (
+from core.smart_geometry import build_sector_plan\nfrom core.geometry import (
     centroid_lonlat, clean_polygon, fall_direction, first_ring, ring_area_m2,
 )
 from core.validation import (
-    SectorAdd, SectorCodes, SectorSave, SectorSplit, ZoneBuild, validate_form,
+    SectorAdd, SectorCodes, SectorRename, SectorSave, SectorSplit, SectorSwap,\n    ZoneBuild, validate_form,
 )
 from db import queries, repository
 from db.connection import get_db
@@ -717,6 +717,179 @@ def _ray_polygon_distance(poly: Polygon, cx: float, cy: float, ang: float) -> fl
         # LineString — take its end
         pts = list(inter.coords)
     return max(math.hypot(x - cx, y - cy) for x, y in pts)
+
+# ---------------------------------------------------------------- sector naming / smart creation
+@bp.route("/sectors/rename", methods=["POST"])
+@validate_form(SectorRename)
+def rename_sector(data: SectorRename):
+    pid = session.get("project_id", "")
+    if not pid:
+        return jsonify({"ok": False, "error": "no project"}), 400
+    if data.code == data.new_code:
+        return jsonify({"ok": False, "error": "new code is unchanged"}), 400
+
+    db = get_db()
+    source = db.sectors.find_one({"project_id": pid, "sector_code": data.code})
+    if not source:
+        return jsonify({"ok": False, "error": f"unknown sector: {data.code}"}), 404
+    if db.sectors.find_one({"project_id": pid, "sector_code": data.new_code}):
+        return jsonify({"ok": False, "error": f"{data.new_code} already exists"}), 409
+
+    revision = repository.new_revision(pid, "03_sectors_edit",
+                                       f"Rename {data.code} -> {data.new_code}")
+    now = datetime.now(timezone.utc)
+
+    # Temporary code avoids the unique (project_id, sector_code) collision.
+    tmp = f"__RENAME__{data.code}__{revision}"
+    db.sectors.update_one({"project_id": pid, "sector_code": data.code},
+                          {"$set": {"sector_code": tmp, "name": tmp}})
+    db.sectors.update_one({"project_id": pid, "sector_code": tmp},
+                          {"$set": {"sector_code": data.new_code,
+                                    "name": data.new_code,
+                                    "revision_id": revision,
+                                    "updated_at": now}})
+
+    zones = list(db.zones.find({"project_id": pid, "sector_code": data.code}))
+    for z in zones:
+        old_name = z.get("name", "")
+        suffix = old_name[len(data.code):] if old_name.startswith(data.code) else ""
+        new_name = data.new_code + suffix
+        db.zones.update_one({"_id": z["_id"]},
+                            {"$set": {"sector_code": data.new_code,
+                                      "name": new_name,
+                                      "updated_at": now,
+                                      "revision_id": revision}})
+    valves = list(db.valves.find({"project_id": pid, "sector_code": data.code}))
+    for v in valves:
+        old_name = v.get("name", "")
+        suffix = old_name[len(data.code):] if old_name.startswith(data.code) else ""
+        new_name = data.new_code + suffix
+        db.valves.update_one({"_id": v["_id"]},
+                             {"$set": {"sector_code": data.new_code,
+                                       "name": new_name,
+                                       "zone_name": (
+                                           data.new_code + v["zone_name"][len(data.code):]
+                                           if v.get("zone_name", "").startswith(data.code)
+                                           else v.get("zone_name")
+                                       ),
+                                       "updated_at": now,
+                                       "revision_id": revision}})
+
+    # Pipe topology references are derived from valve/sector names.
+    repository.delete_where("pipes", {"project_id": pid})
+    return jsonify({"ok": True, "code": data.new_code,
+                    "zones_updated": len(zones), "valves_updated": len(valves),
+                    "pipes_removed": True, "revision_id": revision})
+
+
+@bp.route("/sectors/swap", methods=["POST"])
+@validate_form(SectorSwap)
+def swap_sectors(data: SectorSwap):
+    pid = session.get("project_id", "")
+    if not pid:
+        return jsonify({"ok": False, "error": "no project"}), 400
+    if data.first == data.second:
+        return jsonify({"ok": False, "error": "select two different sectors"}), 400
+
+    db = get_db()
+    rows = list(db.sectors.find({"project_id": pid,
+                                 "sector_code": {"$in": [data.first, data.second]}}))
+    if len(rows) != 2:
+        return jsonify({"ok": False, "error": "both sectors must exist"}), 404
+
+    revision = repository.new_revision(pid, "03_sectors_edit",
+                                       f"Swap {data.first} <-> {data.second}")
+    now = datetime.now(timezone.utc)
+
+    # Swap identifiers while preserving each polygon.
+    tmp_a = f"__SWAP_A__{revision}"
+    tmp_b = f"__SWAP_B__{revision}"
+    db.sectors.update_one({"project_id": pid, "sector_code": data.first},
+                          {"$set": {"sector_code": tmp_a, "name": tmp_a}})
+    db.sectors.update_one({"project_id": pid, "sector_code": data.second},
+                          {"$set": {"sector_code": tmp_b, "name": tmp_b}})
+    db.sectors.update_one({"project_id": pid, "sector_code": tmp_a},
+                          {"$set": {"sector_code": data.second, "name": data.second,
+                                    "revision_id": revision, "updated_at": now}})
+    db.sectors.update_one({"project_id": pid, "sector_code": tmp_b},
+                          {"$set": {"sector_code": data.first, "name": data.first,
+                                    "revision_id": revision, "updated_at": now}})
+
+    # Existing zones/valves belong to the physical polygon, so exchange their
+    # sector ownership and code prefixes as well.
+    for old_code, new_code in ((data.first, data.second), (data.second, data.first)):
+        for z in list(db.zones.find({"project_id": pid, "sector_code": old_code})):
+            old_name = z.get("name", "")
+            suffix = old_name[len(old_code):] if old_name.startswith(old_code) else ""
+            db.zones.update_one({"_id": z["_id"]},
+                                {"$set": {"sector_code": new_code,
+                                          "name": new_code + suffix,
+                                          "updated_at": now,
+                                          "revision_id": revision}})
+        for v in list(db.valves.find({"project_id": pid, "sector_code": old_code})):
+            old_name = v.get("name", "")
+            suffix = old_name[len(old_code):] if old_name.startswith(old_code) else ""
+            db.valves.update_one({"_id": v["_id"]},
+                                 {"$set": {"sector_code": new_code,
+                                           "name": new_code + suffix,
+                                           "updated_at": now,
+                                           "revision_id": revision}})
+    repository.delete_where("pipes", {"project_id": pid})
+    return jsonify({"ok": True, "first": data.second, "second": data.first,
+                    "pipes_removed": True, "revision_id": revision})
+
+
+@bp.route("/sectors/smart-create", methods=["POST"])
+def smart_create_sectors():
+    pid = session.get("project_id", "")
+    if not pid:
+        return jsonify({"ok": False, "error": "no project"}), 400
+
+    db = get_db()
+    prop = db.property.find_one({"project_id": pid})
+    if not prop or not prop.get("geom"):
+        return jsonify({"ok": False, "error": "land boundary is required"}), 400
+
+    target = float(current_app.config.get("SECTOR_TARGET_AREA_HA", 1.0)) * 10000.0
+    water_points = []
+    for wp in db.water_points.find({"project_id": pid}):
+        loc = wp.get("location") or {}
+        coords = loc.get("coordinates") or []
+        if len(coords) >= 2:
+            water_points.append((float(coords[0]), float(coords[1])))
+
+    try:
+        plan, generated = build_sector_plan(prop["geom"], water_points, target)
+    except ValueError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 422
+
+    revision = repository.new_revision(
+        pid, "03_sectors_edit",
+        f"Smart Create {plan.number_of_sectors} sectors ({plan.strategy})")
+    now = datetime.now(timezone.utc)
+    repository.delete_where("sectors", {"project_id": pid})
+    repository.delete_where("zones", {"project_id": pid})
+    repository.delete_where("valves", {"project_id": pid})
+    repository.delete_where("pipes", {"project_id": pid})
+
+    for item in generated:
+        repository.upsert(
+            "sectors", {"project_id": pid, "sector_code": item["code"]},
+            {"project_id": pid, "name": item["code"],
+             "sector_code": item["code"], "geom": item["geom"],
+             "area_m2": item["area_m2"], "revision_id": revision,
+             "created_at": now, "updated_at": now})
+
+    return jsonify({
+        "ok": True,
+        "sectors": len(generated),
+        "target_area_m2": plan.target_area_m2,
+        "strategy": plan.strategy,
+        "water_priority": plan.water_priority,
+        "derived_cleared": True,
+        "revision_id": revision,
+    })
+
 
 # ---------------------------------------------------------------- valves (legacy compatibility)
 @bp.route("/valves", methods=["GET", "POST"])
