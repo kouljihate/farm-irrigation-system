@@ -65,6 +65,29 @@ class SectorAdd(BaseModel):
         return v.strip()
 
 
+class SectorRename(BaseModel):
+    code: str = Field(..., min_length=1, max_length=50)
+    new_code: str = Field(..., min_length=1, max_length=50)
+
+    @field_validator("code", "new_code")
+    @classmethod
+    def validate_code(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("sector code must not be blank")
+        return v
+
+
+class SectorSwap(BaseModel):
+    first: str = Field(..., min_length=1, max_length=50)
+    second: str = Field(..., min_length=1, max_length=50)
+
+    @field_validator("first", "second")
+    @classmethod
+    def validate_code(cls, v: str) -> str:
+        return v.strip()
+
+
 class SectorCodes(BaseModel):
     """Remove / merge operate on a set of sector codes."""
     codes: str = Field(..., min_length=1, max_length=2000)
