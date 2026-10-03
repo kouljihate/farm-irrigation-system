@@ -606,8 +606,7 @@
       onOk: () => zoneOp(API.smart, {sector_code:sector}, j => "Smart Split created " + j.zones + " zones")});
   });
 
-  // -------- initial load --------
-  loadAll();
+  // Shared map.js performs the initial farm geometry load.
 })();
 </script>
 {% endblock %}
