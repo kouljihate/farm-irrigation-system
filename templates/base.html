@@ -273,6 +273,76 @@
     }
 
 
+    // Global button standard: normalize every non-table bilingual button
+    // to the same split text/icon design used by Geometry/Sectors.
+    document.querySelectorAll(".btn:not(.btn-close):not(.icon-only):not(.table .btn)").forEach(function (btn) {
+      if (btn.closest(".table")) return;
+      if (btn.classList.contains("app-btn-ready")) return;
+
+      const ar = btn.querySelector(":scope > .ar");
+      const en = btn.querySelector(":scope > .en");
+      const existingText = btn.textContent.trim();
+
+      // Preserve buttons that intentionally contain custom controls.
+      if (!ar && !en && btn.querySelector("input, select, textarea")) return;
+
+      const label = document.createElement("span");
+      label.className = "app-btn-label";
+
+      if (ar || en) {
+        if (ar) label.appendChild(ar);
+        if (en) label.appendChild(en);
+      } else {
+        const text = document.createElement("span");
+        text.className = "en";
+        text.textContent = existingText;
+        label.appendChild(text);
+      }
+
+      let rawIcon = btn.getAttribute("data-icon") || "";
+      if (!rawIcon) {
+        const source = [ar?.textContent || "", en?.textContent || "", btn.getAttribute("aria-label") || "", btn.getAttribute("title") || ""].join(" ");
+        const match = source.match(/[\\p{Extended_Pictographic}]/u);
+        rawIcon = match ? match[0] : "";
+      }
+
+      if (!rawIcon) {
+        const source = (en?.textContent || ar?.textContent || existingText).toLowerCase();
+        const iconMap = [
+          [/delete|remove|trash|حذف/, "🗑️"],
+          [/edit|rename|تعديل|تسمية/, "✏️"],
+          [/save|حفظ/, "💾"],
+          [/cancel|close|إلغاء|إغلاق/, "✕"],
+          [/confirm|ok|yes|apply|تأكيد|نعم|موافق/, "✓"],
+          [/add|create|إضافة|إنشاء/, "➕"],
+          [/download|تنزيل/, "⬇️"],
+          [/upload|رفع/, "⬆️"],
+          [/map|خريطة|الخريطة/, "🗺"],
+          [/settings|config|إعدادات/, "⚙️"]
+        ];
+        for (const [pattern, icon] of iconMap) {
+          if (pattern.test(source)) { rawIcon = icon; break; }
+        }
+      }
+      if (!rawIcon) rawIcon = "•";
+
+      // Remove trailing emoji from the bilingual label so the icon lives
+      // only in the dedicated right-hand block.
+      label.querySelectorAll(".ar, .en").forEach(function (node) {
+        node.textContent = node.textContent.replace(/[\\p{Extended_Pictographic}]/gu, "").trim();
+      });
+
+      const icon = document.createElement("span");
+      icon.className = "app-btn-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = rawIcon;
+
+      btn.textContent = "";
+      btn.appendChild(label);
+      btn.appendChild(icon);
+      btn.classList.add("app-btn-ready");
+    });
+
     // Table actions are always compact icon-only circles.
     document.querySelectorAll(".table td .btn, .table th .btn, .table .row-actions .btn").forEach(function (btn) {
       if (btn.classList.contains("btn-close")) return;
