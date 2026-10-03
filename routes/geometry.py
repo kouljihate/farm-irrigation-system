@@ -625,23 +625,27 @@ def merge_zones(data: ZoneCodes):
     if len(sectors) != 1:
         return jsonify({"ok": False, "error": "zones must belong to the same sector"}), 409
     sector_code = next(iter(sectors))
-    all_pts = []
-    for r in rows:
-        ring = first_ring(r.get("geom"))
-        if len(ring) < 3:
-            return jsonify({"ok": False, "error": f"{r.get('name')} has no usable geometry"}), 400
-        all_pts.append(Polygon(_to_local_xy(ring)[0]))
-    merged = clean_polygon(unary_union(all_pts))
+
+    all_rings = [first_ring(r.get("geom")) for r in rows]
+    if any(len(r) < 3 for r in all_rings):
+        return jsonify({"ok": False, "error": "one or more zones has no usable geometry"}), 400
+    all_pts = [p for ring in all_rings for p in ring]
+    lon0 = sum(p[0] for p in all_pts) / len(all_pts)
+    lat0 = sum(p[1] for p in all_pts) / len(all_pts)
+    coslat = math.cos(math.radians(lat0))
+
+    def proj(ring):
+        return Polygon([(math.radians(x - lon0) * _EARTH_R * coslat,
+                         math.radians(y - lat0) * _EARTH_R) for x, y in ring])
+
+    merged = clean_polygon(unary_union([proj(r) for r in all_rings]))
     if merged.is_empty or merged.geom_type != "Polygon":
         return jsonify({"ok": False, "error": "zones must form one connected polygon"}), 409
 
-    # Use the first selected name as the stable identity.
     keep = sorted(names)[0]
     revision = repository.new_revision(pid, "04_zones",
                                        f"Merge {', '.join(names)} -> {keep}")
     now = datetime.now(timezone.utc)
-    ring0 = first_ring(rows[0].get("geom"))
-    _, lon0, lat0 = _to_local_xy(ring0)
     ring_ll = _poly_ring_to_ll(merged, lon0, lat0)
     area = _zone_store(pid, keep, sector_code, 1, ring_ll, revision, now)
     drop = [n for n in names if n != keep]
@@ -680,8 +684,9 @@ def split_zone(data: ZoneSplit):
     repository.delete_where("zones", {"project_id": pid, "name": data.name})
     repository.delete_where("valves", {"project_id": pid, "zone_name": data.name})
     created = []
+    next_index = _next_zone_index(db, pid, sector_code)
     for i, part in enumerate(parts, 1):
-        name = f"{sector_code}-Z{_next_zone_index(db, pid, sector_code)}"
+        name = f"{sector_code}-Z{next_index + i - 1}"
         ring_ll = _poly_ring_to_ll(part, lon0, lat0)
         area = _zone_store(pid, name, sector_code, i, ring_ll, revision, now)
         created.append({"name": name, "area_m2": area})
