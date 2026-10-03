@@ -14,11 +14,13 @@ from shapely.geometry import LineString, Polygon
 from shapely.ops import unary_union
 
 from core.async_tasks import get_project_tasks, get_task_status, submit_async_task
-from core.smart_geometry import build_sector_plan\nfrom core.geometry import (
+from core.smart_geometry import build_sector_plan
+from core.geometry import (
     centroid_lonlat, clean_polygon, fall_direction, first_ring, ring_area_m2,
 )
 from core.validation import (
-    SectorAdd, SectorCodes, SectorRename, SectorSave, SectorSplit, SectorSwap,\n    ZoneBuild, validate_form,
+    SectorAdd, SectorCodes, SectorRename, SectorSave, SectorSplit, SectorSwap,
+    ZoneBuild, validate_form,
 )
 from db import queries, repository
 from db.connection import get_db
