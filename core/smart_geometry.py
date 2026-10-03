@@ -52,6 +52,30 @@ def _direction_from_water(poly, water_points):
     return (dx / n, dy / n) if n > 1e-9 else None
 
 
+def _elevation_direction(ring, to_xy):
+    samples = [p for p in ring if len(p) >= 3 and p[2] is not None]
+    if len(samples) < 3:
+        return None
+    points = [(to_xy(p[0], p[1])[0], to_xy(p[0], p[1])[1], float(p[2]))
+              for p in samples]
+    mx = sum(p[0] for p in points) / len(points)
+    my = sum(p[1] for p in points) / len(points)
+    A = []
+    z = []
+    for x, y, elev in points:
+        A.append([x - mx, y - my, 1.0])
+        z.append(elev)
+    try:
+        import numpy as np
+        coef, *_ = np.linalg.lstsq(np.asarray(A), np.asarray(z), rcond=None)
+        # Downhill is the negative elevation gradient.
+        dx, dy = -float(coef[0]), -float(coef[1])
+        n = math.hypot(dx, dy)
+        return (dx / n, dy / n) if n > 1e-9 else None
+    except Exception:
+        return None
+
+
 def _principal_direction(poly):
     coords = list(poly.exterior.coords)[:-1]
     mx = sum(x for x, _ in coords) / len(coords)
@@ -127,10 +151,26 @@ def build_sector_plan(property_geom, water_points=None, target_area_m2=10000.0):
     n = min(n, 100)
 
     local_water = [to_xy(lon, lat) for lon, lat in (water_points or [])]
-    direction = _direction_from_water(poly, local_water)
-    water_priority = direction is not None
-    if direction is None:
+    water_direction = _direction_from_water(poly, local_water)
+    elevation_direction = _elevation_direction(ring, to_xy)
+    water_priority = water_direction is not None
+    elevation_used = elevation_direction is not None
+
+    if water_direction and elevation_direction:
+        dx = water_direction[0] * 0.65 + elevation_direction[0] * 0.35
+        dy = water_direction[1] * 0.65 + elevation_direction[1] * 0.35
+        nrm = math.hypot(dx, dy) or 1.0
+        direction = (dx / nrm, dy / nrm)
+        strategy = "water/elevation weighted equal-area bands"
+    elif water_direction:
+        direction = water_direction
+        strategy = "water-aligned equal-area bands"
+    elif elevation_direction:
+        direction = elevation_direction
+        strategy = "elevation-aligned equal-area bands"
+    else:
         direction = _principal_direction(poly)
+        strategy = "principal-axis equal-area bands"
 
     parts = _split_equal_area(poly, n, direction)
     if len(parts) != n:
@@ -151,8 +191,7 @@ def build_sector_plan(property_geom, water_points=None, target_area_m2=10000.0):
     return SmartSectorPlan(
         number_of_sectors=n,
         target_area_m2=target_area_m2,
-        strategy=("water-aligned equal-area bands" if water_priority
-                  else "principal-axis equal-area bands"),
+        strategy=strategy,
         water_priority=water_priority,
-        elevation_used=False,
+        elevation_used=elevation_used,
     ), output
