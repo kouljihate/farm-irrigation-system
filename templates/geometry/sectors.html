@@ -610,11 +610,16 @@
   document.getElementById("sector-split").addEventListener("click", () => {
     const codes = requireSelection(1, "Split");
     if (!codes) return;
-    const parts = parseInt(prompt("Number of parts (2-10):", "2") || "2", 10);
-    if (!Number.isInteger(parts) || parts < 2 || parts > 10) return;
-    const mode = prompt("Split mode: contour, fan, or strip", "contour") || "contour";
-    runSectorOperation(API.split, {code: codes[0], parts, split_mode: mode},
-      j => "✔ Split " + j.source + " into " + j.parts);
+    appPrompt({titleEn:"Split sector", titleAr:"تقسيم القطاع", labelEn:"Number of parts (2–10)", labelAr:"عدد الأجزاء (2–10)", value:"2",
+      onOk: rawParts => {
+        const parts = parseInt(rawParts || "2", 10);
+        if (!Number.isInteger(parts) || parts < 2 || parts > 10) return;
+        appPrompt({titleEn:"Split mode", titleAr:"طريقة التقسيم", labelEn:"Mode: contour, fan, or strip", labelAr:"الطريقة: محيط، مروحة، أو شريط", value:"contour",
+          onOk: mode => runSectorOperation(API.split, {code: codes[0], parts, split_mode: mode || "contour"},
+            j => "✔ Split " + j.source + " into " + j.parts)
+        });
+      }
+    });
   });
 
   document.getElementById("sector-merge").addEventListener("click", () => {
