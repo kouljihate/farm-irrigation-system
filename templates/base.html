@@ -272,6 +272,35 @@
       });
     }
 
+
+    // Table actions are always compact icon-only circles.
+    document.querySelectorAll(".table td .btn, .table th .btn, .table .row-actions .btn").forEach(function (btn) {
+      if (btn.classList.contains("btn-close")) return;
+      const raw = (btn.getAttribute("aria-label") || btn.getAttribute("title") ||
+                   btn.getAttribute("data-confirm-en") || btn.textContent || "").trim();
+      const icons = [
+        ["delete|remove|trash|حذف", "🗑️"],
+        ["edit|rename|تعديل|تسمية", "✏️"],
+        ["save|حفظ", "💾"],
+        ["revert|undo|تراجع", "↩️"],
+        ["download|تنزيل", "⬇️"],
+        ["view|open|عرض|فتح", "👁️"],
+        ["add|create|إضافة", "➕"],
+        ["build|generate|إنشاء|بناء", "⚙️"]
+      ];
+      let icon = "";
+      for (const pair of icons) {
+        if (new RegExp(pair[0], "i").test(raw)) { icon = pair[1]; break; }
+      }
+      if (!icon) {
+        const match = raw.match(/^[^A-Za-z\u0600-\u06ff0-9\s]/u);
+        if (match) icon = match[0];
+      }
+      btn.dataset.icon = icon || "•";
+      btn.setAttribute("aria-label", btn.getAttribute("aria-label") || raw);
+      btn.setAttribute("title", btn.getAttribute("title") || raw);
+    });
+
     // Close mobile drawer on link click
     sb?.querySelectorAll(".sidebar-link").forEach(link => {
       link.addEventListener("click", () => {
