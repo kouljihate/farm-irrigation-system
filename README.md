@@ -4,7 +4,7 @@ Flask + MongoDB web application for orchard/farm irrigation system design.
 
 ## Version
 
-**2.1.0** — Implemented the clean Project → Geometry → Hydrology → Field → Report workflow, moved Valves into Hydrology, and standardized 1 ha sector targets, 3 zones per sector, and 90/63/32 mm pipe defaults.
+**2.2.0** — Implemented the clean Project → Geometry → Hydrology → Field → Report workflow, moved Valves into Hydrology, and standardized 1 ha sector targets, 3 zones per sector, and 90/63/32 mm pipe defaults.
 
 ## UI / Domain Refactoring
 
@@ -82,7 +82,7 @@ Sectors and Zones provide a consistent toolbar for:
 
 `Add` · `Rename` · `Remove` · `Swap` · `Split` · `Merge` · `Smart Create/Split`
 
-Smart geometry is intended to consider land boundary, elevation, water-point locations, area balance and practical pipe routing. Polygon construction remains deterministic and validation-driven.
+Smart geometry considers the land boundary, water-point proximity and optional elevation data when available. Polygon construction remains deterministic and validation-driven; the strategy layer does not directly draw arbitrary polygons.
 
 ### Design defaults
 
