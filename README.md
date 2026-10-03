@@ -15,7 +15,7 @@ The primary navigation now follows the design workflow: **Project → Geometry �
 - **Backend**: Flask 3.x, PyMongo 4.x
 - **Geometry**: Shapely 2.x, NumPy
 - **Report**: lxml (KML), ezdxf (DXF), GeoJSON, CSV
-- **Frontend**: Bootstrap 5 (Bootswatch Journal), Leaflet 1.9, bilingual EN/AR
+- **Frontend**: Bootstrap 5 (Bootswatch Journal), MapHub embeds, bilingual EN/AR
 - **Database**: MongoDB (local or Atlas)
 - **Validation**: Pydantic 2.x
 - **Async**: ThreadPoolExecutor for long-running geometry operations
@@ -121,14 +121,14 @@ Smart geometry considers the land boundary, water-point proximity and optional e
 8. **Field → Trees** — place trees along rows.
 9. **Field → DripLine** — generate dripline per row.
 10. **Report** — generate BOM and download KML, DXF, GeoJSON and CSV outputs.
-11. **Map** — inspect the complete design on the Leaflet map.
+11. **Map** — inspect the complete design on the MapHub project map.
 
 ## Features
 
 - Authentication with Flask-Login and role-based access
 - Revision history for build steps
 - Bilingual English/Arabic UI with RTL support
-- Interactive Leaflet map
+- MapHub project map with server-side GeoJSON synchronization
 - Multiple deterministic zone split algorithms
 - Pipe routing with direct and boundary-detour modes
 - KML, DXF, GeoJSON and CSV reporting
@@ -147,6 +147,24 @@ GET  /api/v1/zones        — Zones only
 GET  /geometry/tasks/<id> — Async task status
 GET  /geometry/tasks      — All tasks for current project
 ```
+
+## MapHub configuration
+
+The full project map is rendered by MapHub. The farm database remains the source of truth; when the Map page is opened, the current project GeoJSON is synchronized to its MapHub map and the map is embedded in the Flask UI.
+
+MapHub API authentication is server-side using the `MAPHUB_API_KEY` environment variable. The key is never rendered into HTML or JavaScript. MapHub's API uses the `Authorization: Token <api_key>` header and supports creating/updating maps with GeoJSON. urlMapHub API documentationhttps://docs.maphub.net/api/
+
+Add these values to your local `.env`:
+
+```text
+MAPHUB_API_KEY=your-map-hub-api-key
+MAPHUB_BASE_URL=https://maphub.net
+MAPHUB_EMBED_BASE_URL=https://maphub.net/embed
+MAPHUB_VISIBILITY=unlisted
+MAPHUB_TIMEOUT_SECONDS=20
+```
+
+Do not commit the API key. Because an API key was shared during development, rotate/revoke that key in MapHub and use a newly generated key in the local environment.
 
 ## Configuration
 
