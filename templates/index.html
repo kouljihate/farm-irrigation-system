@@ -159,7 +159,8 @@
 <script>
   window.OVERVIEW_API = {
     geojson: "{{ url_for('api.geojson') }}",
-    bounds:  "{{ url_for('api.bounds') }}"
+    bounds:  "{{ url_for('api.bounds') }}",
+    geometryBase: "{{ url_for('api.update_geometry', collection='COLLECTION', object_id='OBJECT_ID') }}"
   };
 
   (function () {
@@ -228,17 +229,33 @@
           fillOpacity: 0.85,
           weight: 1
         }).bindTooltip(nm);
+        m.feature = f; m.pmIgnore = false;
         layers[coll].addLayer(m);
       } else if (g.type === "LineString") {
         const ll = g.coordinates.map(c => [c[1], c[0]]);
         const line = L.polyline(ll, styleFor(coll)).bindTooltip(nm);
+        line.feature = f; line.pmIgnore = false;
         layers[coll].addLayer(line);
       } else if (g.type === "Polygon") {
         const ll = g.coordinates[0].map(c => [c[1], c[0]]);
         const poly = L.polygon(ll, styleFor(coll)).bindTooltip(nm);
+        poly.feature = f; poly.pmIgnore = false;
         layers[coll].addLayer(poly);
       }
     }
+
+    map.pm.setGlobalOptions({snappable: true, snapDistance: 20});
+    map.pm.addControls({position: "topleft", drawMarker: false, drawCircleMarker: false, drawPolyline: false, drawRectangle: false, drawPolygon: false, drawCircle: false, drawText: false, editMode: true, dragMode: true, cutPolygon: false, removalMode: false, rotateMode: false});
+    async function saveOverviewGeometry(layer) {
+      const p = layer.feature && layer.feature.properties;
+      if (!p || !p.id || !p.collection) return;
+      const url = window.OVERVIEW_API.geometryBase.replace("COLLECTION", encodeURIComponent(p.collection)).replace("OBJECT_ID", encodeURIComponent(p.id));
+      const response = await fetch(url, {method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({geometry: layer.toGeoJSON().geometry})});
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "geometry save failed");
+    }
+    map.on("pm:editend", e => saveOverviewGeometry(e.layer).catch(err => console.error("Geometry save failed:", err)));
+    map.on("pm:dragend", e => saveOverviewGeometry(e.layer).catch(err => console.error("Geometry save failed:", err)));
 
     fetch(window.OVERVIEW_API.geojson)
       .then(r => r.json())
