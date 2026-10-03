@@ -283,7 +283,7 @@
   function requireSelection(n, label) {
     const codes = selectedCodes();
     if (codes.length !== n) {
-      alert(label + ": select exactly " + n + " sector" + (n === 1 ? "" : "s") + ".");
+      appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:label + ": select exactly " + n + " sector" + (n === 1 ? "" : "s") + ".", bodyAr:"يرجى اختيار العدد المطلوب من القطاعات."});
       return null;
     }
     return codes;
@@ -571,35 +571,33 @@
 
     // revert = reload the page (which re-reads the DB)
     revertBtn.addEventListener("click", () => {
-      if (confirm("Discard unsaved changes and reload?")) {
-        window.location.reload();
-      }
+      appConfirm({titleEn:"Discard changes", titleAr:"تجاهل التغييرات", bodyEn:"Discard unsaved changes and reload?", bodyAr:"هل تريد تجاهل التغييرات غير المحفوظة وإعادة تحميل الصفحة؟", onOk:() => window.location.reload()});
     });
   });
 
   // -------- sector toolbar actions --------
   document.getElementById("sector-add").addEventListener("click", () => {
-    const code = (prompt("Sector code (optional):", "") || "").trim();
-    const coords = prompt("Polygon coordinates, one lon,lat per line:", "");
-    if (!coords) return;
-    runSectorOperation(API.add, {code, coords}, j => "✔ Added " + j.code);
+    appPrompt({titleEn:"Add sector", titleAr:"إضافة قطاع", labelEn:"Sector code (optional)", labelAr:"رمز القطاع (اختياري)", value:"",
+      onOk: code => appPrompt({titleEn:"Sector geometry", titleAr:"هندسة القطاع", labelEn:"Polygon coordinates — one lon,lat per line", labelAr:"إحداثيات المضلع — خط لكل lon,lat", multiline:true, value:"",
+        onOk: coords => { if (coords.trim()) runSectorOperation(API.add, {code:code.trim(), coords}, j => "✔ Added " + j.code); }
+      })
+    });
   });
 
   document.getElementById("sector-rename").addEventListener("click", () => {
     const codes = requireSelection(1, "Rename");
     if (!codes) return;
-    const next = (prompt("New sector code:", codes[0]) || "").trim();
-    if (!next) return;
-    runSectorOperation(API.rename, {code: codes[0], new_code: next},
-      j => "✔ Renamed to " + j.code);
+    appPrompt({titleEn:"Rename sector", titleAr:"إعادة تسمية القطاع", labelEn:"New sector code", labelAr:"رمز القطاع الجديد", value:codes[0],
+      onOk: next => { next = next.trim(); if (!next) return; runSectorOperation(API.rename, {code: codes[0], new_code: next}, j => "✔ Renamed to " + j.code); }
+    });
   });
 
   document.getElementById("sector-remove").addEventListener("click", () => {
     const codes = selectedCodes();
-    if (!codes.length) { alert("Select at least one sector."); return; }
-    if (!confirm("Remove " + codes.join(", ") + "? Dependent zones/valves will be removed.")) return;
-    runSectorOperation(API.remove, {codes: codes.join(","), cascade: "1"},
-      j => "✔ Removed " + j.removed + " sector(s)");
+    if (!codes.length) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select at least one sector.", bodyAr:"يرجى اختيار قطاع واحد على الأقل."}); return; }
+    appConfirm({titleEn:"Remove sectors", titleAr:"حذف القطاعات", bodyEn:"Remove " + codes.join(", ") + "? Dependent zones/valves will be removed.", bodyAr:"حذف " + codes.join(", ") + "؟ سيتم حذف المناطق والصمامات التابعة.", danger:true,
+      onOk: () => runSectorOperation(API.remove, {codes: codes.join(","), cascade: "1"},
+      j => "✔ Removed " + j.removed + " sector(s)"));
   });
 
   document.getElementById("sector-swap").addEventListener("click", () => {
@@ -621,16 +619,16 @@
 
   document.getElementById("sector-merge").addEventListener("click", () => {
     const codes = selectedCodes();
-    if (codes.length < 2) { alert("Select at least two sectors."); return; }
-    if (!confirm("Merge " + codes.join(", ") + "?")) return;
-    runSectorOperation(API.merge, {codes: codes.join(","), cascade: "1"},
-      j => "✔ Merged into " + j.code);
+    if (codes.length < 2) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select at least two sectors.", bodyAr:"يرجى اختيار قطاعين على الأقل."}); return; }
+    appConfirm({titleEn:"Merge sectors", titleAr:"دمج القطاعات", bodyEn:"Merge " + codes.join(", ") + "?", bodyAr:"هل تريد دمج " + codes.join(", ") + "؟",
+      onOk: () => runSectorOperation(API.merge, {codes: codes.join(","), cascade: "1"},
+      j => "✔ Merged into " + j.code));
   });
 
   document.getElementById("sector-smart-create").addEventListener("click", () => {
-    if (!confirm("Smart Create will replace existing sectors and clear derived zones, valves and pipes. Continue?")) return;
-    runSectorOperation(API.smart, {}, j =>
-      "✔ Smart Create: " + j.sectors + " sectors (" + j.strategy + ")");
+    appConfirm({titleEn:"Smart Create", titleAr:"الإنشاء الذكي", bodyEn:"Smart Create will replace existing sectors and clear derived zones, valves and pipes. Continue?", bodyAr:"سيستبدل الإنشاء الذكي القطاعات الحالية ويحذف المناطق والصمامات والأنابيب المشتقة. متابعة؟",
+      onOk: () => runSectorOperation(API.smart, {}, j =>
+      "✔ Smart Create: " + j.sectors + " sectors (" + j.strategy + ")"));
   });
 
   // -------- initial load --------
