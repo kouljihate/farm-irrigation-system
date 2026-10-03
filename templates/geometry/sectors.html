@@ -11,33 +11,52 @@
   {# ================= LEFT: toolbar of map actions, then map, then the
      coordinate editor (the sector-specific tool) ================= #}
   <div class="workspace-main">
-    <div class="workspace-toolbar flex-wrap gap-1">
-      <span class="title bi me-1">
-        <span class="en">Sectors</span><span class="ar">القطاعات</span>
-      </span>
-      <button class="btn btn-sm btn-stack btn-outline-primary" id="sector-add" type="button"><span class="ar">➕ إضافة</span><span class="en">Add</span></button>
-      <button class="btn btn-sm btn-stack btn-outline-secondary" id="sector-rename" type="button"><span class="ar">✎ إعادة تسمية</span><span class="en">Rename</span></button>
-      <button class="btn btn-sm btn-stack btn-outline-danger" id="sector-remove" type="button"><span class="ar">− حذف</span><span class="en">Remove</span></button>
-      <button class="btn btn-sm btn-stack btn-outline-secondary" id="sector-swap" type="button"><span class="ar">⇄ تبديل</span><span class="en">Swap</span></button>
-      <button class="btn btn-sm btn-stack btn-outline-secondary" id="sector-split" type="button"><span class="ar">✂ تقسيم</span><span class="en">Split</span></button>
-      <button class="btn btn-sm btn-stack btn-outline-secondary" id="sector-merge" type="button"><span class="ar">⊕ دمج</span><span class="en">Merge</span></button>
-      <button class="btn btn-sm btn-stack btn-success" id="sector-smart-create" type="button"><span class="ar">✨ إنشاء ذكي</span><span class="en">Smart Create</span></button>
-      <span class="vr"></span>
-      <button class="btn btn-outline-secondary btn-sm" id="fit-btn" type="button">
-        <span class="en">Fit map</span><span class="ar">ملاءمة</span>
-      </button>
-      <span class="vr"></span>
-
-      <div class="btn-group btn-group-sm" role="group" aria-label="Map layers">
-        <input type="checkbox" class="btn-check" id="layer-property" checked>
-        <label class="btn btn-outline-secondary" for="layer-property">Property</label>
-        <input type="checkbox" class="btn-check" id="layer-sectors" checked>
-        <label class="btn btn-outline-secondary" for="layer-sectors">Sectors</label>
-        <input type="checkbox" class="btn-check" id="layer-zones" checked>
-        <label class="btn btn-outline-secondary" for="layer-zones">Zones</label>
+    <div class="map-header">
+      <div class="map-header-actions" aria-label="Sector actions">
+        <button class="map-action-btn btn-outline-primary" id="sector-add" type="button" title="Add sector">
+          <span class="map-action-label"><span class="ar">إضافة</span><span class="en">Add</span></span><span class="map-action-icon">➕</span>
+        </button>
+        <button class="map-action-btn btn-outline-secondary" id="sector-rename" type="button" title="Rename sector">
+          <span class="map-action-label"><span class="ar">إعادة تسمية</span><span class="en">Rename</span></span><span class="map-action-icon">✎</span>
+        </button>
+        <button class="map-action-btn btn-outline-danger" id="sector-remove" type="button" title="Remove sector">
+          <span class="map-action-label"><span class="ar">حذف</span><span class="en">Remove</span></span><span class="map-action-icon">🗑️</span>
+        </button>
+        <button class="map-action-btn btn-outline-secondary" id="sector-swap" type="button" title="Swap sectors">
+          <span class="map-action-label"><span class="ar">تبديل</span><span class="en">Swap</span></span><span class="map-action-icon">⇄</span>
+        </button>
+        <button class="map-action-btn btn-outline-secondary" id="sector-split" type="button" title="Split sector">
+          <span class="map-action-label"><span class="ar">تقسيم</span><span class="en">Split</span></span><span class="map-action-icon">✂</span>
+        </button>
+        <button class="map-action-btn btn-outline-secondary" id="sector-merge" type="button" title="Merge sectors">
+          <span class="map-action-label"><span class="ar">دمج</span><span class="en">Merge</span></span><span class="map-action-icon">⊕</span>
+        </button>
+        <button class="map-action-btn btn-success" id="sector-smart-create" type="button" title="Smart Create">
+          <span class="map-action-label"><span class="ar">إنشاء ذكي</span><span class="en">Smart Create</span></span><span class="map-action-icon">✨</span>
+        </button>
       </div>
 
-      <span id="map-summary" class="badge text-bg-secondary ms-auto">— sectors</span>
+      <div class="map-header-layers" aria-label="Map layers">
+        <label class="map-check">
+          <input type="checkbox" id="layer-property" checked>
+          <span class="map-check-label"><span class="ar">الملكية</span><span class="en">Property</span></span>
+        </label>
+        <label class="map-check">
+          <input type="checkbox" id="layer-water" checked>
+          <span class="map-check-label"><span class="ar">الماء</span><span class="en">Water</span></span>
+        </label>
+        <label class="map-check">
+          <input type="checkbox" id="layer-sectors" checked>
+          <span class="map-check-label"><span class="ar">القطاعات</span><span class="en">Sectors</span></span>
+        </label>
+        <label class="map-check">
+          <input type="checkbox" id="layer-zones" checked>
+          <span class="map-check-label"><span class="ar">المناطق</span><span class="en">Zones</span></span>
+        </label>
+      </div>
+
+      <button class="map-fit-btn" id="fit-btn" type="button" title="Fit map" aria-label="Fit map">⌖</button>
+      <span id="map-summary" class="map-summary">— sectors</span>
     </div>
 
     <div id="sectors-map" class="workspace-map"></div>
@@ -196,6 +215,7 @@
 
   const layers = {
     property: L.layerGroup().addTo(map),
+    water:    L.layerGroup().addTo(map),
     sectors:  L.layerGroup().addTo(map),
     zones:    L.layerGroup().addTo(map)
   };
@@ -321,10 +341,31 @@
   function addFeature(f) {
     const coll = f.properties.collection;
     const layer = layers[coll];
-    if (!layer) return;
+    if (!layer && coll !== "water_points" && coll !== "basins") return;
 
     const g = f.geometry;
     const name = f.properties.name || "";
+
+    if (coll === "water_points") {
+      if (g.type === "Point") {
+        const marker = L.circleMarker([g.coordinates[1], g.coordinates[0]], {
+          radius: 7, color: "#0d6efd", fillColor: "#0d6efd", fillOpacity: 0.85, weight: 2
+        }).bindTooltip(name || "Water");
+        layers.water.addLayer(marker);
+      }
+      return;
+    }
+
+    if (coll === "basins") {
+      if (g.type === "Polygon") {
+        const latlngs = g.coordinates[0].map(c => [c[1], c[0]]);
+        const basin = L.polygon(latlngs, {
+          color: "#0d6efd", weight: 2, fillColor: "#0d6efd", fillOpacity: 0.18
+        }).bindTooltip(name || "Basin");
+        layers.water.addLayer(basin);
+      }
+      return;
+    }
 
     if (g.type === "Polygon") {
       const latlngs = g.coordinates[0].map(c => [c[1], c[0]]);
@@ -413,7 +454,12 @@
     clearLayers();
     fetch(API.geojson)
       .then(r => r.json())
-      .then(fc => { renderFeatures(fc.features || []); fitToBounds(); })
+      .then(fc => {
+        renderFeatures(fc.features || []);
+        refreshMapSize();
+        fitToBounds();
+        window.setTimeout(refreshMapSize, 300);
+      })
       .catch(err => console.error("load failed:", err));
   }
 
@@ -462,8 +508,20 @@
   document.getElementById("layer-zones").addEventListener("change", e => {
     e.target.checked ? map.addLayer(layers.zones) : map.removeLayer(layers.zones);
   });
+  document.getElementById("layer-water").addEventListener("change", e => {
+    e.target.checked ? map.addLayer(layers.water) : map.removeLayer(layers.water);
+  });
 
   document.getElementById("fit-btn").addEventListener("click", fitToBounds);
+
+  // Leaflet needs a size refresh after the workspace layout is painted.
+  function refreshMapSize() {
+    window.requestAnimationFrame(() => {
+      map.invalidateSize(true);
+      window.setTimeout(() => map.invalidateSize(true), 150);
+    });
+  }
+  window.addEventListener("resize", refreshMapSize);
 
   // ================= coordinate editor (unchanged behaviour) =================
   function parseCoords(text) {
@@ -637,6 +695,7 @@
   });
 
   // -------- initial load --------
+  refreshMapSize();
   loadAll();
   window.setTimeout(paintChips, 0);
 })();
