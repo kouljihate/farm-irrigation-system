@@ -7,39 +7,52 @@
 </h1>
 
 <div class="workspace">
-
   <div class="workspace-main">
     <div class="workspace-toolbar">
       <span class="title bi">
-        <span class="en">Map view</span><span class="ar">عرض الخريطة</span>
+        <span class="en">MapHub project map</span><span class="ar">خريطة المشروع MapHub</span>
       </span>
-      <span class="vr"></span>
-      <button id="fit-btn" class="btn btn-success btn-sm btn-stack">
-        <span class="ar">تكبير إلى الملك</span>
-        <span class="en">Fit to property</span>
-      </button>
+      {% if maphub_url %}
+      <a class="btn btn-outline-secondary btn-sm ms-auto"
+         href="{{ maphub_url|replace('/embed/', '/') }}"
+         target="_blank" rel="noopener">
+        <span class="en">Open MapHub</span><span class="ar">فتح MapHub</span>
+      </a>
+      {% endif %}
     </div>
 
-    <div id="map" class="workspace-map"></div>
+    {% if maphub_url %}
+      <div class="maphub-frame-wrap">
+        <iframe
+          id="maphub-map"
+          title="Farm Irrigation MapHub map"
+          src="{{ maphub_url }}"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+      </div>
+    {% elif maphub_error %}
+      <div class="alert alert-warning m-3">
+        <strong>MapHub:</strong> {{ maphub_error }}
+      </div>
+    {% else %}
+      <div class="empty-state m-3">
+        <span class="en">Select a project first.</span>
+        <span class="ar">اختر مشروعاً أولاً.</span>
+      </div>
+    {% endif %}
   </div>
 
   <aside class="workspace-side">
     <div class="side-title bi">
-      <span class="en">Layers</span><span class="ar">الطبقات</span>
+      <span class="en">Map provider</span><span class="ar">مزود الخريطة</span>
     </div>
     <div class="side-body">
-      <div id="layer-toggles"></div>
+      <p class="small text-muted mb-0">
+        <span class="en">MapHub is the map rendering/publishing service. MongoDB remains the source of truth for farm geometry.</span>
+        <span class="ar">MapHub هو مزود عرض ونشر الخريطة، بينما تبقى بيانات MongoDB هي المصدر الأساسي لهندسة المزرعة.</span>
+      </p>
     </div>
   </aside>
-
 </div>
-{% endblock %}
-{% block scripts %}
-<script>
-  window.FARM_API = {
-    geojson: "{{ url_for('api.geojson') }}",
-    bounds:  "{{ url_for('api.bounds') }}",
-  };
-</script>
-<script src="{{ url_for('static', filename='js/map.js') }}"></script>
 {% endblock %}
