@@ -2,6 +2,101 @@
    Farm Irrigation Workbench — styles
    ========================================================= */
 
+
+/* =========================================================
+   GLOBAL BUTTON STANDARD
+   - rounded corners everywhere
+   - bilingual buttons: Arabic top, English bottom
+   - table actions: compact icon-only circles
+   ========================================================= */
+.btn,
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  border-radius: 10px !important;
+}
+
+.btn:not(.icon-only):not(.btn-close):has(.ar):has(.en) {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.btn:not(.icon-only):has(.ar):has(.en) .ar {
+  order: 1;
+  display: block;
+  font-family: var(--font-ar);
+  direction: rtl;
+  text-align: center;
+  font-size: 0.86em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.btn:not(.icon-only):has(.ar):has(.en) .en {
+  order: 2;
+  display: block;
+  font-family: var(--font-en);
+  direction: ltr;
+  text-align: center;
+  font-size: 0.62em;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+/* Prevent anonymous leading icon/text nodes from becoming a third row. */
+.btn-stack {
+  min-height: 42px;
+  border-radius: 10px !important;
+}
+
+/* Every action button inside a table is an icon-only circle. */
+.table td .btn,
+.table th .btn,
+.table .row-actions .btn {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  line-height: 1 !important;
+  font-size: 0 !important;
+  vertical-align: middle;
+}
+
+.table td .btn .en,
+.table td .btn .ar,
+.table th .btn .en,
+.table th .btn .ar,
+.table .row-actions .btn .en,
+.table .row-actions .btn .ar {
+  display: none !important;
+}
+
+.table td .btn::before,
+.table th .btn::before,
+.table .row-actions .btn::before {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.table td .btn.js-save::before,
+.table .row-actions .btn.js-save::before { content: "💾"; }
+.table td .btn.js-revert::before,
+.table .row-actions .btn.js-revert::before { content: "↩"; }
+.table td .js-source-edit::before { content: "✏️"; }
+.table td [data-confirm]::before { content: "🗑️"; }
+.table td .btn[type="submit"]::before { content: "💾"; }
+
 /* ---------- Comfortaa ---------- */
 @font-face {
   font-family: 'Comfortaa';
