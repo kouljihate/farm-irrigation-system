@@ -1,4 +1,4 @@
-"""Hydrology section: Mainline, Sub-mains, Manifold."""
+"""Hydrology section: MainLine, SubLines, Valves."""
 from __future__ import annotations
 
 import math
@@ -179,6 +179,51 @@ def _build_submains(project_id: str, offset: float, diameter: int) -> int:
 
     current_app.logger.info("Sub-mains built for %s (%d)", project_id, count)
     return count
+
+
+# ---------------------------------------------------------------- valves
+@bp.route("/valves", methods=["GET", "POST"])
+def valves():
+    """Manage main and zone valves in the Hydrology domain."""
+    pid = session.get("project_id", "")
+    if request.method == "POST":
+        sectors = queries.get_sectors(pid)
+        zones = queries.get_zones(pid)
+        if not sectors or not zones:
+            flash("Need sectors and zones first.", "error")
+        else:
+            from core.valve_rules import build_mv_groups, zv_name
+            revision = repository.new_revision(pid, "05_valves", "Generate valves")
+            repository.clear_step(pid, "valves")
+            now = datetime.now(timezone.utc)
+            by_code = {(s.get("sector_code") or s["name"]): s for s in sectors}
+            count = 0
+            for mv, sector_codes in build_mv_groups(list(by_code)).items():
+                center = centroid_lonlat((by_code.get(sector_codes[0]) or {}).get("geom"))
+                if center:
+                    repository.upsert("valves", {"project_id": pid, "name": mv},
+                        {"project_id": pid, "name": mv, "valve_type": "MV",
+                         "sector_code": sector_codes[0],
+                         "location": {"type": "Point", "coordinates": list(center)},
+                         "diameter_mm": 50, "revision_id": revision,
+                         "created_at": now, "updated_at": now})
+                    count += 1
+            for z in zones:
+                code, zi, center = z.get("sector_code"), z.get("zone_index"), centroid_lonlat(z.get("geom"))
+                if code and zi is not None and center:
+                    name = zv_name(code, zi)
+                    repository.upsert("valves", {"project_id": pid, "name": name},
+                        {"project_id": pid, "name": name, "valve_type": "ZV",
+                         "sector_code": code, "zone_name": z.get("name"),
+                         "location": {"type": "Point", "coordinates": list(center)},
+                         "diameter_mm": 32, "revision_id": revision,
+                         "created_at": now, "updated_at": now})
+                    count += 1
+            flash(f"Built {count} valves.", "success")
+        return redirect(url_for("hydrology.valves"))
+    return render_template("hydrology/valves.html",
+                           mvs=queries.get_valves(pid, "MV"),
+                           zvs=queries.get_valves(pid, "ZV"))
 
 
 # ---------------------------------------------------------------- manifold
