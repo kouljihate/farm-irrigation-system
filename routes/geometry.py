@@ -5,6 +5,7 @@ import math
 import re
 from datetime import datetime, timezone
 
+from config import Config
 from flask import (
     Blueprint, current_app, flash, jsonify, redirect, render_template,
     request, session, url_for,
@@ -850,7 +851,7 @@ def smart_create_sectors():
     if not prop or not prop.get("geom"):
         return jsonify({"ok": False, "error": "land boundary is required"}), 400
 
-    target = float(current_app.config.get("SECTOR_TARGET_AREA_HA", 1.0)) * 10000.0
+    target = float(Config.GEOMETRY.get("sector_target_area_ha", 1.0)) * 10000.0
     water_points = []
     for wp in db.water_points.find({"project_id": pid}):
         loc = wp.get("location") or {}
