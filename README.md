@@ -4,7 +4,11 @@ Flask + MongoDB web application for orchard/farm irrigation system design.
 
 ## Version
 
-**2.1.0** — UI/domain workflow refactoring for Project, Geometry, Hydrology, Field and Report, with 1 ha sector targets, 3 zones per sector, and 90/63/32 mm pipe defaults.
+**2.1.0** — Implemented the clean Project → Geometry → Hydrology → Field → Report workflow, moved Valves into Hydrology, and standardized 1 ha sector targets, 3 zones per sector, and 90/63/32 mm pipe defaults.
+
+## UI / Domain Refactoring
+
+The primary navigation now follows the design workflow: **Project → Geometry → Hydrology → Field → Report**. Geometry is limited to **Sectors** and **Zones**; **Valves** are managed under Hydrology. The legacy `/geometry/valves` URL redirects to Hydrology for compatibility. The existing export endpoints remain available as report/download endpoints while the user-facing module is named Report.
 
 ## Stack
 
