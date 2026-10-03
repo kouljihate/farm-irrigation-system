@@ -340,8 +340,16 @@
 
   function addFeature(f) {
     const coll = f.properties.collection;
+
+    // Shared map engine renders all imported geometry except sector/zone
+    // polygons, whose page-specific styling is handled below.
+    if (coll !== "sectors" && coll !== "zones") {
+      sharedMap.addGeoJSONFeature(f);
+      return;
+    }
+
     const layer = layers[coll];
-    if (!layer && coll !== "water_points" && coll !== "basins") return;
+    if (!layer) return;
 
     const g = f.geometry;
     const name = f.properties.name || "";
