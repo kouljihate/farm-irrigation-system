@@ -485,59 +485,68 @@
   });
 
   document.getElementById("zone-add").addEventListener("click", () => {
-    const sector = (prompt("Sector code:", "") || "").trim();
-    if (!sector) return;
-    const name = (prompt("Zone name (optional):", sector + "-Z") || "").trim();
-    const coords = prompt("Polygon coordinates, one lon,lat per line:", "");
-    if (!coords) return;
-    zoneOp(API.add, {sector_code: sector, name, coords}, j => "Added " + j.name);
+    appPrompt({titleEn:"Add zone", titleAr:"إضافة منطقة", labelEn:"Sector code", labelAr:"رمز القطاع", value:"",
+      onOk: sector => {
+        sector = sector.trim(); if (!sector) return;
+        appPrompt({titleEn:"Zone name", titleAr:"اسم المنطقة", labelEn:"Zone name (optional)", labelAr:"اسم المنطقة (اختياري)", value:sector + "-Z",
+          onOk: name => appPrompt({titleEn:"Zone geometry", titleAr:"هندسة المنطقة", labelEn:"Polygon coordinates — one lon,lat per line", labelAr:"إحداثيات المضلع — خط لكل lon,lat", multiline:true, value:"",
+            onOk: coords => { if (coords.trim()) zoneOp(API.add, {sector_code:sector, name:name.trim(), coords}, j => "Added " + j.name); }
+          })
+        });
+      }
+    });
   });
 
   document.getElementById("zone-rename").addEventListener("click", () => {
     const n = selectedZoneNames();
-    if (n.length !== 1) { alert("Select exactly one zone."); return; }
-    const next = (prompt("New zone name:", n[0]) || "").trim();
-    if (!next) return;
-    zoneOp(API.rename, {name:n[0], new_name:next}, j => "Renamed to " + j.name);
+    if (n.length !== 1) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select exactly one zone.", bodyAr:"يرجى اختيار منطقة واحدة فقط."}); return; }
+    appPrompt({titleEn:"Rename zone", titleAr:"إعادة تسمية المنطقة", labelEn:"New zone name", labelAr:"اسم المنطقة الجديد", value:n[0],
+      onOk: next => { next = next.trim(); if (!next) return; zoneOp(API.rename, {name:n[0], new_name:next}, j => "Renamed to " + j.name); }
+    });
   });
 
   document.getElementById("zone-remove").addEventListener("click", () => {
     const n = selectedZoneNames();
-    if (!n.length) { alert("Select at least one zone."); return; }
-    if (!confirm("Remove " + n.join(", ") + "?")) return;
-    zoneOp(API.remove, {names:n.join(",")}, j => "Removed " + j.removed + " zone(s)");
+    if (!n.length) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select at least one zone.", bodyAr:"يرجى اختيار منطقة واحدة على الأقل."}); return; }
+    appConfirm({titleEn:"Remove zones", titleAr:"حذف المناطق", bodyEn:"Remove " + n.join(", ") + "?", bodyAr:"حذف " + n.join(", ") + "؟", danger:true,
+      onOk: () => zoneOp(API.remove, {names:n.join(",")}, j => "Removed " + j.removed + " zone(s)"));
   });
 
   document.getElementById("zone-swap").addEventListener("click", () => {
     const n = selectedZoneNames();
-    if (n.length !== 2) { alert("Select exactly two zones."); return; }
+    if (n.length !== 2) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select exactly two zones.", bodyAr:"يرجى اختيار منطقتين بالضبط."}); return; }
     zoneOp(API.swap, {first:n[0], second:n[1]}, () => "Swapped zone identities");
   });
 
   document.getElementById("zone-split").addEventListener("click", () => {
     const n = selectedZoneNames();
-    if (n.length !== 1) { alert("Select exactly one zone."); return; }
-    const parts = parseInt(prompt("Number of parts (2-10):","2") || "2",10);
-    if (!Number.isInteger(parts) || parts < 2 || parts > 10) return;
-    const mode = prompt("Split mode: contour, fan, or strip","contour") || "contour";
-    zoneOp(API.split, {name:n[0], parts, split_mode:mode}, j => "Split into " + j.created.length + " zones");
+    if (n.length !== 1) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select exactly one zone.", bodyAr:"يرجى اختيار منطقة واحدة فقط."}); return; }
+    appPrompt({titleEn:"Split zone", titleAr:"تقسيم المنطقة", labelEn:"Number of parts (2–10)", labelAr:"عدد الأجزاء (2–10)", value:"2",
+      onOk: rawParts => {
+        const parts = parseInt(rawParts || "2", 10);
+        if (!Number.isInteger(parts) || parts < 2 || parts > 10) return;
+        appPrompt({titleEn:"Split mode", titleAr:"طريقة التقسيم", labelEn:"Mode: contour, fan, or strip", labelAr:"الطريقة: محيط، مروحة، أو شريط", value:"contour",
+          onOk: mode => zoneOp(API.split, {name:n[0], parts, split_mode:mode || "contour"}, j => "Split into " + j.created.length + " zones")
+        });
+      }
+    });
   });
 
   document.getElementById("zone-merge").addEventListener("click", () => {
     const n = selectedZoneNames();
-    if (n.length < 2) { alert("Select at least two zones."); return; }
-    if (!confirm("Merge " + n.join(", ") + "? Zones must touch and belong to the same sector.")) return;
-    zoneOp(API.merge, {names:n.join(",")}, j => "Merged into " + j.name);
+    if (n.length < 2) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select at least two zones.", bodyAr:"يرجى اختيار منطقتين على الأقل."}); return; }
+    appConfirm({titleEn:"Merge zones", titleAr:"دمج المناطق", bodyEn:"Merge " + n.join(", ") + "? Zones must touch and belong to the same sector.", bodyAr:"هل تريد دمج " + n.join(", ") + "؟ يجب أن تكون المناطق متلامسة وفي نفس القطاع.",
+      onOk: () => zoneOp(API.merge, {names:n.join(",")}, j => "Merged into " + j.name)});
   });
 
   document.getElementById("zone-smart-split").addEventListener("click", () => {
     const n = selectedZoneNames();
-    if (n.length !== 1) { alert("Select one zone belonging to the sector to split."); return; }
+    if (n.length !== 1) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select one zone belonging to the sector to split.", bodyAr:"اختر منطقة واحدة تابعة للقطاع لتقسيمها."}); return; }
     const chip = document.querySelector('#zone-chips .zone-chip[data-zone="' + CSS.escape(n[0]) + '"]');
     const sector = chip ? chip.dataset.sector : "";
-    if (!sector) { alert("The selected zone has no sector reference."); return; }
-    if (!confirm("Smart Split will rebuild all zones in sector " + sector + " using the configured 3-zone target. Continue?")) return;
-    zoneOp(API.smart, {sector_code:sector}, j => "Smart Split created " + j.zones + " zones");
+    if (!sector) { appAlert({titleEn:"Invalid zone", titleAr:"منطقة غير صالحة", bodyEn:"The selected zone has no sector reference.", bodyAr:"المنطقة المحددة لا تحتوي على مرجع للقطاع."}); return; }
+    appConfirm({titleEn:"Smart Split", titleAr:"التقسيم الذكي", bodyEn:"Smart Split will rebuild all zones in sector " + sector + " using the configured 3-zone target. Continue?", bodyAr:"سيعيد التقسيم الذكي بناء جميع مناطق القطاع " + sector + " وفق الإعداد الافتراضي لثلاث مناطق. متابعة?",
+      onOk: () => zoneOp(API.smart, {sector_code:sector}, j => "Smart Split created " + j.zones + " zones")});
   });
 
   // -------- initial load --------
