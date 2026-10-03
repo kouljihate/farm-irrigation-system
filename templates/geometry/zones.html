@@ -173,7 +173,8 @@
     remove:  "{{ url_for('geometry.delete_zones') }}",
     swap:    "{{ url_for('geometry.swap_zones') }}",
     split:   "{{ url_for('geometry.split_zone') }}",
-    smart:   "{{ url_for('geometry.smart_split_zones') }}"
+    smart:   "{{ url_for('geometry.smart_split_zones') }}",
+    merge:   "{{ url_for('geometry.merge_zones') }}"
   };
 
   const selectedZones = new Set();
@@ -523,7 +524,8 @@
   document.getElementById("zone-merge").addEventListener("click", () => {
     const n = selectedZoneNames();
     if (n.length < 2) { alert("Select at least two zones."); return; }
-    alert("Zone merge requires a shared sector and is intentionally conservative. Use Smart Split after changing the sector geometry.");
+    if (!confirm("Merge " + n.join(", ") + "? Zones must touch and belong to the same sector.")) return;
+    zoneOp(API.merge, {names:n.join(",")}, j => "Merged into " + j.name);
   });
 
   document.getElementById("zone-smart-split").addEventListener("click", () => {
