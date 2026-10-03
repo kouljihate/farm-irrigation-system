@@ -311,6 +311,8 @@
         fillColor: color,
         fillOpacity
       }).bindTooltip(name);
+      poly.feature = f;
+      poly.pmIgnore = false;
       layer.addLayer(poly);
     }
   }
@@ -359,6 +361,33 @@
     }
     return { expected, drawn };
   }
+
+  // Geoman is the common editor for geometry pages.
+  map.pm.setGlobalOptions({snappable: true, snapDistance: 20});
+  map.pm.addControls({
+    position: "topleft",
+    drawMarker: false, drawCircleMarker: false, drawPolyline: false,
+    drawRectangle: false, drawPolygon: false, drawCircle: false, drawText: false,
+    editMode: true, dragMode: true, cutPolygon: false, removalMode: false, rotateMode: false
+  });
+
+  async function saveGeomanLayer(layer) {
+    const p = layer.feature && layer.feature.properties;
+    if (!p || !p.id || !p.collection) return;
+    const url = "{{ url_for('api.update_geometry', collection='COLLECTION', object_id='OBJECT_ID') }}"
+      .replace("COLLECTION", encodeURIComponent(p.collection))
+      .replace("OBJECT_ID", encodeURIComponent(p.id));
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({geometry: layer.toGeoJSON().geometry})
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error(result.error || "geometry save failed");
+  }
+
+  map.on("pm:editend", e => saveGeomanLayer(e.layer).catch(err => showStatus("err", "⚠️ " + err.message)));
+  map.on("pm:dragend", e => saveGeomanLayer(e.layer).catch(err => showStatus("err", "⚠️ " + err.message)));
 
   // -------- load everything --------
   function loadAll() {
