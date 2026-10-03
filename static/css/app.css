@@ -1557,6 +1557,22 @@ pre { white-space: pre-wrap; word-break: break-all; }
 }
 
 
+/* Sector multi-selection */
+.map-selection-summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  min-width: 70px;
+  font-size: 0.65rem;
+  color: #495057;
+  white-space: nowrap;
+}
+.sector-select-cell { text-align: center; vertical-align: middle !important; }
+.js-sector-select, #sector-select-all { width: 13px; height: 13px; margin: 0; cursor: pointer; }
+.sectors-table tr.sector-row-selected td { background: #eef7f2 !important; }
+.map-action-btn:disabled { opacity: 0.38; cursor: not-allowed; filter: grayscale(0.25); transform: none !important; }
+
 /* =========================================================
    GEOMETRY MAP HEADER
    - left: seven sector action buttons
