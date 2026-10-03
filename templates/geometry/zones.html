@@ -182,7 +182,9 @@
   function selectedZoneNames() { return Array.from(selectedZones); }
   function refreshZoneSelection() {
     document.querySelectorAll("#zone-chips .zone-chip").forEach(chip => {
-      chip.classList.toggle("selected", selectedZones.has(chip.dataset.zone));
+      const selected = selectedZones.has(chip.dataset.zone);
+      chip.classList.toggle("selected", selected);
+      chip.style.boxShadow = selected ? "0 0 0 3px rgba(13,110,253,.35)" : "none";
     });
   }
   function postZone(url, fields) {
