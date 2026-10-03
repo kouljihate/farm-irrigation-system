@@ -97,8 +97,54 @@
     if (typeof window.showToast === "function") {
       window.showToast(text, o.category, { delay: o.delay });
     } else {
-      alert(text);
+      // No native browser dialogs: fail silently if the global toast helper is unavailable.
+      console.warn(text);
     }
+  };
+
+
+  /* ---------- INPUT FORM ---------- */
+  // Usage:
+  // appPrompt({titleEn, titleAr, labelEn, labelAr, value, multiline, onOk})
+  window.appPrompt = function (opts) {
+    const o = Object.assign({
+      titleEn: "Input", titleAr: "إدخال",
+      labelEn: "Value", labelAr: "القيمة",
+      value: "", multiline: false, okEn: "OK", okAr: "تأكيد",
+      onOk: null
+    }, opts || {});
+
+    const el = document.getElementById("appInputModal");
+    if (!el) return;
+    const modal = bootstrap.Modal.getOrCreateInstance(el);
+    el.querySelector(".js-input-title-en").textContent = o.titleEn;
+    el.querySelector(".js-input-title-ar").textContent = o.titleAr;
+    el.querySelector(".js-input-label-en").textContent = o.labelEn;
+    el.querySelector(".js-input-label-ar").textContent = o.labelAr;
+    el.querySelector(".js-input-ok .en").textContent = o.okEn;
+    el.querySelector(".js-input-ok .ar").textContent = o.okAr;
+
+    const input = el.querySelector(".js-input-value");
+    const textarea = el.querySelector(".js-input-textarea");
+    input.style.display = o.multiline ? "none" : "";
+    textarea.style.display = o.multiline ? "" : "none";
+    (o.multiline ? textarea : input).value = o.value ?? "";
+    const target = o.multiline ? textarea : input;
+    const ok = el.querySelector(".js-input-ok");
+    if (ok._appInputHandler) ok.removeEventListener("click", ok._appInputHandler);
+    const handler = function () {
+      const value = target.value;
+      modal.hide();
+      if (typeof o.onOk === "function") o.onOk(value);
+    };
+    ok.addEventListener("click", handler);
+    ok._appInputHandler = handler;
+    el.addEventListener("shown.bs.modal", function focusOnce() {
+      target.focus();
+      target.select?.();
+      el.removeEventListener("shown.bs.modal", focusOnce);
+    });
+    modal.show();
   };
 
   /* ---------- Auto-wire data-attributes ----------
