@@ -141,7 +141,8 @@ class Config:
     APP_TITLE   = _yaml.get("app", {}).get("title", "Farm Irrigation Workbench")
     APP_VERSION = _yaml.get("app", {}).get("version", "1.0.0")
 
-    # Defaults
+    # Geometry / Defaults
+    GEOMETRY = _yaml.get("geometry", {})
     DEFAULTS = _yaml.get("defaults", {})
 
     # Engineering assumptions for the design checks (core/hydraulics.py)
