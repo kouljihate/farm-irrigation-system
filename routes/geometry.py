@@ -514,6 +514,186 @@ def _do_build_zones(project_id: str, n_parts: int, offset: float,
     return total
 
 
+# ---------------------------------------------------------------- zone operations
+def _zone_ring(doc):
+    ring = first_ring(doc.get("geom"))
+    if len(ring) < 3:
+        raise ValueError("zone has no usable geometry")
+    return ring
+
+
+def _zone_store(project_id, name, sector_code, zone_index, ring, revision, now):
+    area = ring_area_m2(ring)
+    repository.upsert(
+        "zones", {"project_id": project_id, "name": name},
+        {"project_id": project_id, "name": name, "sector_code": sector_code,
+         "zone_index": zone_index,
+         "geom": {"type": "Polygon", "coordinates": [ring]},
+         "area_m2": area, "revision_id": revision,
+         "created_at": now, "updated_at": now},
+    )
+    return area
+
+
+@bp.route("/zones/add", methods=["POST"])
+@validate_form(ZoneAdd)
+def add_zone(data: ZoneAdd):
+    pid = session.get("project_id", "")
+    db = get_db()
+    if not pid:
+        return jsonify({"ok": False, "error": "no project"}), 400
+    if not db.sectors.find_one({"project_id": pid, "sector_code": data.sector_code}):
+        return jsonify({"ok": False, "error": "unknown sector"}), 404
+    try:
+        ring = _parse_ring(data.coords)
+    except (ValueError, IndexError) as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 400
+    name = data.name.strip() or f"{data.sector_code}-Z{db.zones.count_documents({'project_id': pid, 'sector_code': data.sector_code}) + 1}"
+    if db.zones.find_one({"project_id": pid, "name": name}):
+        return jsonify({"ok": False, "error": f"{name} already exists"}), 409
+    revision = repository.new_revision(pid, "04_zones", f"Add {name}")
+    area = _zone_store(pid, name, data.sector_code, 1, ring, revision, datetime.now(timezone.utc))
+    return jsonify({"ok": True, "name": name, "area_m2": area})
+
+
+@bp.route("/zones/rename", methods=["POST"])
+@validate_form(ZoneRename)
+def rename_zone(data: ZoneRename):
+    pid = session.get("project_id", "")
+    db = get_db()
+    doc = db.zones.find_one({"project_id": pid, "name": data.name})
+    if not doc:
+        return jsonify({"ok": False, "error": "unknown zone"}), 404
+    if db.zones.find_one({"project_id": pid, "name": data.new_name}):
+        return jsonify({"ok": False, "error": "new zone name already exists"}), 409
+    revision = repository.new_revision(pid, "04_zones", f"Rename {data.name} -> {data.new_name}")
+    now = datetime.now(timezone.utc)
+    db.zones.update_one({"_id": doc["_id"]},
+                        {"$set": {"name": data.new_name,
+                                  "updated_at": now, "revision_id": revision}})
+    db.valves.update_many({"project_id": pid, "zone_name": data.name},
+                          {"$set": {"zone_name": data.new_name,
+                                    "name": data.new_name.replace("-Z", "-ZV")}})
+    return jsonify({"ok": True, "name": data.new_name})
+
+
+@bp.route("/zones/delete", methods=["POST"])
+@validate_form(ZoneCodes)
+def delete_zones(data: ZoneCodes):
+    pid = session.get("project_id", "")
+    names = data.names.split(",")
+    revision = repository.new_revision(pid, "04_zones", f"Remove zones: {', '.join(names)}")
+    removed = repository.delete_where("zones", {"project_id": pid, "name": {"$in": names}})
+    repository.delete_where("valves", {"project_id": pid, "zone_name": {"$in": names}})
+    return jsonify({"ok": True, "removed": removed, "revision_id": revision})
+
+
+@bp.route("/zones/swap", methods=["POST"])
+@validate_form(ZoneSwap)
+def swap_zones(data: ZoneSwap):
+    pid = session.get("project_id", "")
+    db = get_db()
+    a = db.zones.find_one({"project_id": pid, "name": data.first})
+    b = db.zones.find_one({"project_id": pid, "name": data.second})
+    if not a or not b:
+        return jsonify({"ok": False, "error": "both zones must exist"}), 404
+    revision = repository.new_revision(pid, "04_zones", f"Swap {data.first} <-> {data.second}")
+    tmpa, tmpb = f"__ZONE_A__{revision}", f"__ZONE_B__{revision}"
+    db.zones.update_one({"_id": a["_id"]}, {"$set": {"name": tmpa}})
+    db.zones.update_one({"_id": b["_id"]}, {"$set": {"name": tmpb}})
+    db.zones.update_one({"_id": a["_id"]}, {"$set": {"name": data.second, "updated_at": datetime.now(timezone.utc), "revision_id": revision}})
+    db.zones.update_one({"_id": b["_id"]}, {"$set": {"name": data.first, "updated_at": datetime.now(timezone.utc), "revision_id": revision}})
+    for old_name, new_name in ((data.first, data.second), (data.second, data.first)):
+        db.valves.update_many({"project_id": pid, "zone_name": old_name},
+                              {"$set": {"zone_name": new_name,
+                                        "name": new_name.replace("-Z", "-ZV")}})
+    return jsonify({"ok": True, "revision_id": revision})
+
+
+@bp.route("/zones/split", methods=["POST"])
+@validate_form(ZoneSplit)
+def split_zone(data: ZoneSplit):
+    pid = session.get("project_id", "")
+    db = get_db()
+    doc = db.zones.find_one({"project_id": pid, "name": data.name})
+    if not doc:
+        return jsonify({"ok": False, "error": "unknown zone"}), 404
+    try:
+        ring = _zone_ring(doc)
+        pts_xy, lon0, lat0 = _to_local_xy(ring)
+        poly = clean_polygon(Polygon(pts_xy))
+        if data.split_mode == "fan":
+            parts = _split_fan(poly, data.parts)
+        elif data.split_mode == "strip":
+            parts = _split_strip(poly, data.parts)
+        else:
+            parts = _split_contour(poly, data.parts)
+        parts = [p for p in parts if p and not p.is_empty and p.geom_type == "Polygon"]
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 422
+    if len(parts) < 2:
+        return jsonify({"ok": False, "error": "could not split zone"}), 422
+    sector_code = doc.get("sector_code") or data.name.split("-Z")[0]
+    revision = repository.new_revision(pid, "04_zones", f"Split {data.name} -> {len(parts)}")
+    now = datetime.now(timezone.utc)
+    repository.delete_where("zones", {"project_id": pid, "name": data.name})
+    repository.delete_where("valves", {"project_id": pid, "zone_name": data.name})
+    created = []
+    for i, part in enumerate(parts, 1):
+        name = f"{sector_code}-Z{_next_zone_index(db, pid, sector_code)}"
+        ring_ll = _poly_ring_to_ll(part, lon0, lat0)
+        area = _zone_store(pid, name, sector_code, i, ring_ll, revision, now)
+        created.append({"name": name, "area_m2": area})
+    return jsonify({"ok": True, "source": data.name, "created": created,
+                    "revision_id": revision})
+
+
+def _next_zone_index(db, project_id, sector_code):
+    highest = 0
+    for z in db.zones.find({"project_id": project_id, "sector_code": sector_code}, {"name": 1}):
+        m = re.search(r"-Z(\\d+)$", z.get("name", ""))
+        if m:
+            highest = max(highest, int(m.group(1)))
+    return highest + 1
+
+
+@bp.route("/zones/smart-split", methods=["POST"])
+def smart_split_zones():
+    pid = session.get("project_id", "")
+    db = get_db()
+    if not pid:
+        return jsonify({"ok": False, "error": "no project"}), 400
+    sector_code = (request.form.get("sector_code") or "").strip()
+    if not sector_code:
+        return jsonify({"ok": False, "error": "sector_code is required"}), 400
+    sector = db.sectors.find_one({"project_id": pid, "sector_code": sector_code})
+    if not sector:
+        return jsonify({"ok": False, "error": "unknown sector"}), 404
+
+    ring = first_ring(sector.get("geom"))
+    if len(ring) < 3:
+        return jsonify({"ok": False, "error": "sector has no usable geometry"}), 400
+    pts_xy, lon0, lat0 = _to_local_xy(ring)
+    poly = clean_polygon(Polygon(pts_xy))
+    n_parts = int(Config.GEOMETRY.get("zones_per_sector", 3))
+    parts = _split_contour(poly, n_parts)
+    revision = repository.new_revision(pid, "04_zones",
+                                       f"Smart Split {sector_code} -> {n_parts}")
+    now = datetime.now(timezone.utc)
+    repository.delete_where("zones", {"project_id": pid, "sector_code": sector_code})
+    repository.delete_where("valves", {"project_id": pid, "sector_code": sector_code})
+    created = []
+    for j, part in enumerate(parts, 1):
+        if part is None or part.is_empty or part.geom_type != "Polygon":
+            continue
+        name = f"{sector_code}-Z{j}"
+        ring_ll = _poly_ring_to_ll(part, lon0, lat0)
+        area = _zone_store(pid, name, sector_code, j, ring_ll, revision, now)
+        created.append({"name": name, "area_m2": area})
+    return jsonify({"ok": True, "sector_code": sector_code,
+                    "zones": len(created), "revision_id": revision})
+
+
 # ---------------------------------------------------------------- strategies
 
 def _split_contour(poly: Polygon, n_parts: int):
