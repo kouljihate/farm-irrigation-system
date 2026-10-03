@@ -1,4 +1,4 @@
-"""Geometry section: Sectors, Zones, Valves."""
+"""Geometry section: Sectors and Zones."""
 from __future__ import annotations
 
 import math
@@ -719,68 +719,11 @@ def _ray_polygon_distance(poly: Polygon, cx: float, cy: float, ang: float) -> fl
         pts = list(inter.coords)
     return max(math.hypot(x - cx, y - cy) for x, y in pts)
 
-# ---------------------------------------------------------------- valves
+# ---------------------------------------------------------------- valves (legacy compatibility)
 @bp.route("/valves", methods=["GET", "POST"])
-def valves():
-    pid = session.get("project_id", "")
-
-    if request.method == "POST":
-        count = _build_valves(pid)
-        if count:
-            flash(f"Built {count} valves.", "success")
-        return redirect(url_for("geometry.valves"))
-
-    mvs = queries.get_valves(pid, "MV")
-    zvs = queries.get_valves(pid, "ZV")
-    return render_template("geometry/valves.html", mvs=mvs, zvs=zvs)
-
-
-def _build_valves(project_id: str) -> int:
-    sectors = queries.get_sectors(project_id)
-    zones = queries.get_zones(project_id)
-    if not sectors or not zones:
-        flash("Need sectors and zones first.", "error")
-        return 0
-
-    revision = repository.new_revision(project_id, "05_valves", "Generate valves")
-    repository.clear_step(project_id, "valves")
-
-    now = datetime.now(timezone.utc)
-    count = 0
-
-    by_code = {(s.get("sector_code") or s["name"]): s for s in sectors}
-    mv_groups = build_mv_groups(list(by_code))
-
-    for mv, sector_codes in mv_groups.items():
-        center = centroid_lonlat((by_code.get(sector_codes[0]) or {}).get("geom"))
-        if not center:
-            continue
-        repository.upsert("valves",
-            {"project_id": project_id, "name": mv},
-            {"project_id": project_id, "name": mv, "valve_type": "MV",
-             "sector_code": sector_codes[0],
-             "location": {"type": "Point", "coordinates": list(center)},
-             "diameter_mm": 50, "revision_id": revision,
-             "created_at": now, "updated_at": now})
-        count += 1
-
-    for z in zones:
-        code = z.get("sector_code")
-        zi = z.get("zone_index")
-        center = centroid_lonlat(z.get("geom"))
-        if not code or zi is None or not center:
-            continue
-        name = zv_name(code, zi)
-        repository.upsert("valves",
-            {"project_id": project_id, "name": name},
-            {"project_id": project_id, "name": name, "valve_type": "ZV",
-             "sector_code": code, "zone_name": z.get("name"),
-             "location": {"type": "Point", "coordinates": list(center)},
-             "diameter_mm": 32, "revision_id": revision,
-             "created_at": now, "updated_at": now})
-        count += 1
-
-    return count
+def valves_legacy():
+    """Valves moved to Hydrology; keep the old URL as a compatibility redirect."""
+    return redirect(url_for("hydrology.valves"))
 
 @bp.route("/zones/build", methods=["POST"])
 @validate_form(ZoneBuild)
