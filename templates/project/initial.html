@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 workspace-title">Step 01 — Initialize Project</h1>
+<div class="workspace">
+
+  <div class="workspace-main">
+    <form method="post" enctype="multipart/form-data" class="workspace-toolbar">
+      <span class="title bi">
+    <span class="en">Import KML</span><span class="ar">استيراد KML</span>
+  </span>
+      <input type="file" name="kml" accept=".kml" class="form-control form-control-sm" style="width:auto;" required>
+      <button type="submit" name="action" value="preview" class="btn btn-outline-secondary btn-sm">Preview only</button>
+      <button type="submit" name="action" value="import" class="btn btn-success btn-sm">Import to database</button>
+    </form>
+
+    <div class="workspace-body flush">
+      {% if preview %}
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Name</th><th>Kind</th><th>Vertices</th></tr></thead>
+        <tbody>{% for r in preview %}
+        <tr><td>{{ r.name }}</td><td>{{ r.kind }}</td><td>{{ r.vertices }}</td></tr>
+        {% endfor %}</tbody>
+      </table>
+      {% else %}
+      <div class="alert alert-info m-3 mb-3">Choose a KML file to preview or import.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+    <span class="en">Preview</span><span class="ar">معاينة</span>
+  </div>
+    <div class="side-body">
+      <div class="d-flex justify-content-between py-2">
+        <span class="text-muted">Placemarks</span><strong>{{ preview_count or 0 }}</strong>
+      </div>
+    </div>
+  </aside>
+
+</div>
+{% endblock %}

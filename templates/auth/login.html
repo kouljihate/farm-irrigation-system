@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Sign In · {{ app_title }}{% endblock %}
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-card-head bi">
+      <span class="en">Sign In</span>
+      <span class="ar">تسجيل الدخول</span>
+    </div>
+    <div class="auth-card-body">
+      <form method="post" novalidate>
+        <div class="mb-3">
+          <label for="username" class="form-label bi">
+            <span class="en">Username</span>
+            <span class="ar">اسم المستخدم</span>
+          </label>
+          <input type="text" class="form-control" id="username" name="username"
+                 autocomplete="username" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label bi">
+            <span class="en">Password</span>
+            <span class="ar">كلمة المرور</span>
+          </label>
+          <input type="password" class="form-control" id="password" name="password"
+                 autocomplete="current-password" required>
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary btn-stack">
+            <span class="ar">دخول</span>
+            <span class="en">Sign In</span>
+          </button>
+        </div>
+      </form>
+      <div class="text-center mt-3">
+        <small class="text-muted bi">
+          <span class="en">Don't have an account?</span>
+          <span class="ar">ليس لديك حساب؟</span>
+          <a href="{{ url_for('auth.register') }}" class="ms-1">
+            <span class="en">Register</span>
+            <span class="ar">سجل الآن</span>
+          </a>
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

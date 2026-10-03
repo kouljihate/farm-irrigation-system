@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · {{ app_title }}{% endblock %}
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-card-head">
+      <span class="en">Error</span>
+      <span class="ar">خطأ</span>
+    </div>
+    <div class="auth-card-body text-center">
+      <div class="display-4 fw-bold text-danger mb-1">{{ code }}</div>
+      <p class="text-muted">{{ message }}</p>
+      <a href="{{ url_for('home.home') }}" class="btn btn-success btn-stack">
+        <span class="ar">العودة للرئيسية</span>
+        <span class="en">Back to home</span>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

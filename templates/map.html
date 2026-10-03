@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Map · {{ app_title }}{% endblock %}
+{% block content %}
+<h1 class="h3 workspace-title bi">
+  <span class="en">Map</span><span class="ar">الخريطة</span>
+  — <code>{{ project_id }}</code>
+</h1>
+
+<div class="workspace">
+
+  <div class="workspace-main">
+    <div class="workspace-toolbar">
+      <span class="title bi">
+        <span class="en">Map view</span><span class="ar">عرض الخريطة</span>
+      </span>
+      <span class="vr"></span>
+      <button id="fit-btn" class="btn btn-success btn-sm btn-stack">
+        <span class="ar">تكبير إلى الملك</span>
+        <span class="en">Fit to property</span>
+      </button>
+    </div>
+
+    <div id="map" class="workspace-map"></div>
+  </div>
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+      <span class="en">Layers</span><span class="ar">الطبقات</span>
+    </div>
+    <div class="side-body">
+      <div id="layer-toggles"></div>
+    </div>
+  </aside>
+
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.FARM_API = {
+    geojson: "{{ url_for('api.geojson') }}",
+    bounds:  "{{ url_for('api.bounds') }}",
+  };
+</script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}

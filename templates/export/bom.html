@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 workspace-title">Bill of Materials</h1>
+<div class="workspace">
+
+  <div class="workspace-main">
+    <form method="post" class="workspace-toolbar">
+      <span class="title bi">
+    <span class="en">Bill of Materials</span><span class="ar">قائمة المواد</span>
+  </span>
+      <button class="btn btn-success btn-sm" type="submit">Recompute BOM</button>
+    </form>
+
+    <div class="workspace-body flush">
+      {% if rows %}
+      <table class="table table-striped mb-0">
+        <thead><tr><th>Category</th><th>Description</th><th>Spec</th><th>Unit</th><th>Qty</th><th>Unit price</th><th>Total</th></tr></thead>
+        <tbody>{% for r in rows %}
+        <tr>
+          <td>{{ r.category }}</td><td>{{ r.description }}</td><td>{{ r.spec }}</td>
+          <td>{{ r.unit }}</td><td>{{ "%.1f"|format(r.quantity) }}</td>
+          <td>{{ "%.2f"|format(r.unit_price) }}</td>
+          <td>{{ "%.2f"|format(r.quantity * r.unit_price) }}</td>
+        </tr>
+        {% endfor %}</tbody>
+      </table>
+      {% else %}
+      <div class="alert alert-info m-3 mb-3">Nothing to compute yet. Run the previous steps.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+    <span class="en">Totals</span><span class="ar">الإجماليات</span>
+  </div>
+    <div class="side-body">
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Line items</span><strong>{{ rows|length }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-2">
+        <span class="text-muted">Estimated total</span><strong>{{ "%.2f"|format(total) }}</strong>
+      </div>
+    </div>
+  </aside>
+
+</div>
+{% endblock %}

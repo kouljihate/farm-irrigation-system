@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="h3 workspace-title bi">
+  <span class="en">Sectors</span>
+  <span class="ar">القطاعات</span>
+</h1>
+
+<div class="workspace">
+
+  {# ================= LEFT: toolbar of map actions, then map, then the
+     coordinate editor (the sector-specific tool) ================= #}
+  <div class="workspace-main">
+    <div class="workspace-toolbar">
+      <span class="title bi">
+        <span class="en">Sector map</span><span class="ar">خريطة القطاعات</span>
+      </span>
+      <span class="vr"></span>
+
+      <button class="btn btn-outline-secondary btn-sm" id="fit-btn" type="button">
+        <span class="en">Fit map</span><span class="ar">ملاءمة</span>
+      </button>
+
+      <span class="vr"></span>
+
+      <div class="btn-group btn-group-sm" role="group" aria-label="Map layers">
+        <input type="checkbox" class="btn-check" id="layer-property" checked>
+        <label class="btn btn-outline-secondary" for="layer-property">Property</label>
+        <input type="checkbox" class="btn-check" id="layer-sectors" checked>
+        <label class="btn btn-outline-secondary" for="layer-sectors">Sectors</label>
+        <input type="checkbox" class="btn-check" id="layer-zones" checked>
+        <label class="btn btn-outline-secondary" for="layer-zones">Zones</label>
+      </div>
+
+      <span id="map-summary" class="badge text-bg-secondary ms-auto">— sectors</span>
+    </div>
+
+    <div id="sectors-map" class="workspace-map"></div>
+
+    <div class="workspace-toolbar">
+      <span class="title bi">
+        <span class="en">Edit coordinates</span><span class="ar">تحرير الإحداثيات</span>
+      </span>
+    </div>
+
+    {% if sectors %}
+    <div class="workspace-body">
+    <p class="text-muted small mb-3 bi">
+      <span class="en">Edit coordinates below (one <code>lon,lat</code> per line). Area and vertex count update live. Click <strong>Save</strong> to commit.</span>
+      <span class="ar">حرر الإحداثيات بالأسفل (سطر لكل <code>lon,lat</code>). يتم تحديث المساحة وعدد النقاط فورياً. اضغط <strong>حفظ</strong> للتثبيت.</span>
+    </p>
+
+    <table class="sectors-table">
+      <thead>
+        <tr>
+          <th style="width:70px;">Code</th>
+          <th>Coordinates (lon,lat per line)</th>
+          <th style="width:130px;">Metrics</th>
+          <th style="width:150px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sectors %}
+        <tr data-code="{{ s.code }}">
+          <td class="sector-code">{{ s.code }}</td>
+
+          <td>
+            <textarea class="coords-box js-coords" spellcheck="false">{{ s.coords_text }}</textarea>
+          </td>
+
+          <td>
+            <div class="metrics">
+              <div class="metric-pill">
+                <span class="label">Verts</span>
+                <span class="value js-verts">{{ s.vertices }}</span>
+              </div>
+              <div class="metric-pill">
+                <span class="label">m²</span>
+                <span class="value js-area-m2">{{ "%.1f"|format(s.area_m2) }}</span>
+              </div>
+              <div class="metric-pill">
+                <span class="label">ha</span>
+                <span class="value js-area-ha">{{ "%.4f"|format(s.area_m2 / 10000) }}</span>
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-sm btn-success js-save" type="button">
+                <span class="en">💾 Save</span><span class="ar">حفظ</span>
+              </button>
+              <button class="btn btn-sm btn-outline-secondary js-revert" type="button">
+                <span class="en">↺ Revert</span><span class="ar">تراجع</span>
+              </button>
+              <div class="save-msg js-msg"></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+
+    {% else %}
+    <div class="workspace-body">
+    <div class="empty-state bi">
+      <div>
+        <div class="en">No sectors found. Run Step 01 first.</div>
+        <div class="ar">لا توجد قطاعات. نفذ الخطوة 01 أولاً.</div>
+      </div>
+    </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ================= RIGHT: metrics + current sectors ================= #}
+  <aside class="workspace-side">
+    <div class="side-title bi">
+      <span class="en">Sector metrics</span><span class="ar">قياسات القطاعات</span>
+    </div>
+    <div class="side-body">
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Sectors</span><strong>{{ sectors|length }}</strong>
+      </div>
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Total area (m²)</span>
+        <strong>{{ "%.1f"|format(sectors|sum(attribute='area_m2')) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Total area (ha)</span>
+        <strong>{{ "%.4f"|format(sectors|sum(attribute='area_m2') / 10000) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-2">
+        <span class="text-muted">Average (m²)</span>
+        <strong>{{ "%.1f"|format(sectors|sum(attribute='area_m2') / sectors|length) if sectors else 0 }}</strong>
+      </div>
+
+      <div class="zones-status" id="map-status"></div>
+    </div>
+
+    <div id="sector-list-card" {% if not sectors %}style="display:none;"{% endif %}>
+    <div class="side-title border-top static bi">
+      <span class="en">Current sectors</span><span class="ar">القطاعات الحالية</span>
+      <span id="sector-count" class="text-muted small">{{ sectors|length }}</span>
+    </div>
+      <div class="side-body">
+        <div class="zone-chips" id="sector-chips">
+          {% for s in sectors %}
+          <div class="zone-chip" data-sector="{{ s.code }}">
+            <span class="js-chip-name">{{ s.code }}</span>
+            <span class="area">{{ "%.1f"|format(s.area_m2) }} m²</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  "use strict";
+
+  const API = {
+    geojson: "{{ url_for('api.geojson') }}",
+    bounds:  "{{ url_for('api.bounds') }}",
+    save:    "{{ url_for('geometry.save_sector') }}"
+  };
+
+  const R = 6378137.0;
+  const M_PER_DEG_LAT = Math.PI * R / 180.0;
+
+  // ================= map (mirrors geometry/zones.html) =================
+  const map = L.map("sectors-map").setView([33.8455, -4.5860], 15);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 20, attribution: "© OpenStreetMap"
+  }).addTo(map);
+
+  const layers = {
+    property: L.layerGroup().addTo(map),
+    sectors:  L.layerGroup().addTo(map),
+    zones:    L.layerGroup().addTo(map)
+  };
+
+  const colors = {
+    property: "#000000"
+  };
+
+  /* Per-sector base palette (8 distinct hues) — same as zones.html so a
+     sector keeps its colour when you move between the two pages. */
+  const SECTOR_PALETTE = {
+    S1: { base: "#00897b", name: "teal"    },
+    S2: { base: "#f9a825", name: "amber"   },
+    S3: { base: "#7e57c2", name: "violet"  },
+    S4: { base: "#43a047", name: "green"   },
+    S5: { base: "#e53935", name: "red"     },
+    S6: { base: "#1e88e5", name: "blue"    },
+    S7: { base: "#fb8c00", name: "orange"  },
+    S8: { base: "#d81b60", name: "pink"    }
+  };
+
+  /* Lightness offsets per zone index — Z1 darker, Z2 mid, Z3 lighter */
+  const ZONE_SHADE = { 1: -18, 2: 0, 3: 22 };
+
+  /* hex #rrggbb -> hsl {h, s, l} */
+  function hexToHsl(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  }
+
+  function hslToHex(h, s, l) {
+    l = Math.max(0, Math.min(100, l));
+    s = Math.max(0, Math.min(100, s));
+    s /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    const toHex = x => Math.round(255 * x).toString(16).padStart(2, "0");
+    return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+  }
+
+  function sectorColor(sectorCode) {
+    const base = (SECTOR_PALETTE[sectorCode] || { base: "#607d8b" }).base;
+    return base;
+  }
+
+  function zoneColor(sectorCode, zoneIndex) {
+    const hsl = hexToHsl(sectorColor(sectorCode));
+    const deltaL = ZONE_SHADE[zoneIndex] ?? 0;
+    return hslToHex(hsl.h, hsl.s, hsl.l + deltaL);
+  }
+
+  /* code -> {layer, bounds} so chips can zoom and highlight */
+  const sectorIndex = {};
+
+  const mapErrors = [];
+  const statusEl = document.getElementById("map-status");
+
+  function showStatus(kind, text) {
+    statusEl.className = "zones-status " + kind;
+    statusEl.textContent = text;
+  }
+
+  function addFeature(f) {
+    const coll = f.properties.collection;
+    const layer = layers[coll];
+    if (!layer) return;
+
+    const g = f.geometry;
+    const name = f.properties.name || "";
+
+    if (g.type === "Polygon") {
+      const latlngs = g.coordinates[0].map(c => [c[1], c[0]]);
+      let color = colors[coll];
+      let fillOpacity = 0.05;
+      let weight = 2;
+
+      if (coll === "zones") {
+        const sector = f.properties.sector_code || "";
+        color = zoneColor(sector, f.properties.zone_index || 1);
+        fillOpacity = 0.35;
+        weight = 1.5;
+      } else if (coll === "sectors") {
+        color = sectorColor(f.properties.sector_code || name);
+        fillOpacity = 0.15;
+        weight = 2;
+      }
+
+      const poly = L.polygon(latlngs, {
+        color, weight, fillColor: color, fillOpacity
+      }).bindTooltip(name);
+      layer.addLayer(poly);
+
+      if (coll === "sectors") {
+        const code = f.properties.sector_code || name;
+        sectorIndex[code] = { poly, bounds: poly.getBounds() };
+      }
+    }
+  }
+
+  /* Add one feature, isolating failures so a single bad geometry can't
+     silently abort the whole render loop. */
+  function tryAddFeature(f) {
+    try {
+      addFeature(f);
+      return true;
+    } catch (err) {
+      const where = (f.properties && (f.properties.name || f.properties.collection)) || "feature";
+      mapErrors.push(where + ": " + (err && err.message ? err.message : String(err)));
+      return false;
+    }
+  }
+
+  function clearLayers() {
+    Object.values(layers).forEach(g => g.clearLayers());
+    Object.keys(sectorIndex).forEach(k => delete sectorIndex[k]);
+  }
+
+  function setSummary(n) {
+    document.getElementById("map-summary").textContent = n + " sectors on map";
+  }
+
+  function renderFeatures(features) {
+    mapErrors.length = 0;
+    let expected = 0, drawn = 0;
+    features.forEach(f => {
+      const isSector = f.properties && f.properties.collection === "sectors";
+      if (isSector) expected += 1;
+      if (tryAddFeature(f) && isSector) drawn += 1;
+    });
+    setSummary(drawn);
+    document.getElementById("sector-count").textContent = drawn;
+
+    const card = document.getElementById("sector-list-card");
+    card.style.display = drawn ? "" : "none";
+
+    if (expected) {
+      if (drawn === expected) {
+        showStatus("ok", "✔ " + drawn + " sectors on map");
+      } else {
+        showStatus("err", "⚠️ " + drawn + "/" + expected + " sectors drawn on map. " +
+                   mapErrors.slice(0, 3).join("; "));
+      }
+    }
+    return { expected, drawn };
+  }
+
+  function fitToBounds() {
+    fetch(API.bounds)
+      .then(r => r.json())
+      .then(d => { if (d.bounds) map.fitBounds(d.bounds, { padding: [20, 20] }); });
+  }
+
+  // -------- load everything --------
+  function loadAll() {
+    clearLayers();
+    fetch(API.geojson)
+      .then(r => r.json())
+      .then(fc => { renderFeatures(fc.features || []); fitToBounds(); })
+      .catch(err => console.error("load failed:", err));
+  }
+
+  // -------- chips: colour + click-to-zoom + hover highlight --------
+  function paintChips() {
+    document.querySelectorAll("#sector-chips .zone-chip").forEach(chip => {
+      if (chip.dataset.wired === "1") return;   // save -> loadAll -> paintChips: don't stack listeners
+      chip.dataset.wired = "1";
+      const code = chip.getAttribute("data-sector");
+      const col  = sectorColor(code);
+      chip.style.background = col + "22";   // ~13% opacity fill
+      chip.style.borderColor = col;
+      chip.style.color = "#212529";
+      chip.style.cursor = "pointer";
+
+      chip.addEventListener("mouseenter", () => {
+        const rec = sectorIndex[code];
+        if (rec) rec.poly.setStyle({ weight: 4 });
+      });
+      chip.addEventListener("mouseleave", () => {
+        const rec = sectorIndex[code];
+        if (rec) rec.poly.setStyle({ weight: 2 });
+      });
+      chip.addEventListener("click", () => {
+        const rec = sectorIndex[code];
+        if (rec) map.fitBounds(rec.bounds, { padding: [24, 24] });
+      });
+    });
+  }
+
+  // -------- layer toggles --------
+  document.getElementById("layer-property").addEventListener("change", e => {
+    e.target.checked ? map.addLayer(layers.property) : map.removeLayer(layers.property);
+  });
+  document.getElementById("layer-sectors").addEventListener("change", e => {
+    e.target.checked ? map.addLayer(layers.sectors) : map.removeLayer(layers.sectors);
+  });
+  document.getElementById("layer-zones").addEventListener("change", e => {
+    e.target.checked ? map.addLayer(layers.zones) : map.removeLayer(layers.zones);
+  });
+
+  document.getElementById("fit-btn").addEventListener("click", fitToBounds);
+
+  // ================= coordinate editor (unchanged behaviour) =================
+  function parseCoords(text) {
+    const out = [];
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.trim();
+      if (!line) continue;
+      const parts = line.split(",").map(s => s.trim());
+      if (parts.length < 2) continue;
+      const lon = parseFloat(parts[0]);
+      const lat = parseFloat(parts[1]);
+      if (!isFinite(lon) || !isFinite(lat)) continue;
+      out.push([lon, lat]);
+    }
+    return out;
+  }
+
+  // Shoelace area in m² (lat-corrected)
+  function ringAreaM2(ring) {
+    if (ring.length < 3) return 0;
+    const r = ring.slice();
+    if (r[0][0] !== r[r.length - 1][0] || r[0][1] !== r[r.length - 1][1]) {
+      r.push(r[0]);
+    }
+    let latSum = 0;
+    for (const p of r) latSum += p[1];
+    const lat0 = latSum / r.length;
+    const mPerDegLon = M_PER_DEG_LAT * Math.cos(lat0 * Math.PI / 180);
+
+    let s = 0;
+    for (let i = 0; i < r.length - 1; i++) {
+      const x1 = r[i][0] * mPerDegLon, y1 = r[i][1] * M_PER_DEG_LAT;
+      const x2 = r[i + 1][0] * mPerDegLon, y2 = r[i + 1][1] * M_PER_DEG_LAT;
+      s += x1 * y2 - x2 * y1;
+    }
+    return Math.abs(s) / 2;
+  }
+
+  function updateMetrics(row) {
+    const ta = row.querySelector(".js-coords");
+    const ring = parseCoords(ta.value);
+
+    // count vertices excluding duplicate closing point
+    let verts = ring.length;
+    if (ring.length > 1 &&
+        ring[0][0] === ring[ring.length - 1][0] &&
+        ring[0][1] === ring[ring.length - 1][1]) {
+      verts -= 1;
+    }
+
+    const area = ringAreaM2(ring);
+
+    row.querySelector(".js-verts").textContent   = verts;
+    row.querySelector(".js-area-m2").textContent = area.toFixed(1);
+    row.querySelector(".js-area-ha").textContent = (area / 10000).toFixed(4);
+  }
+
+  function setMsg(row, text, isError) {
+    const el = row.querySelector(".js-msg");
+    el.textContent = text;
+    el.classList.remove("ok", "err");
+    el.classList.add(isError ? "err" : "ok");
+    if (!isError) {
+      setTimeout(() => { el.textContent = ""; }, 3000);
+    }
+  }
+
+  // wire up every row
+  document.querySelectorAll("tr[data-code]").forEach(row => {
+    const ta = row.querySelector(".js-coords");
+    const saveBtn = row.querySelector(".js-save");
+    const revertBtn = row.querySelector(".js-revert");
+
+    // live update on typing
+    ta.addEventListener("input", () => updateMetrics(row));
+
+    // initial metrics
+    updateMetrics(row);
+
+    // save
+    saveBtn.addEventListener("click", async () => {
+      const code = row.getAttribute("data-code");
+      const fd = new FormData();
+      fd.append("code", code);
+      fd.append("coords", ta.value);
+
+      try {
+        const r = await fetch(API.save, { method: "POST", body: fd });
+        const j = await r.json();
+        if (!j.ok) {
+          setMsg(row, "❌ " + (j.error || "save failed"), true);
+          return;
+        }
+        // update metrics from server response
+        row.querySelector(".js-verts").textContent   = j.vertices;
+        row.querySelector(".js-area-m2").textContent = j.area_m2.toFixed(1);
+        row.querySelector(".js-area-ha").textContent = j.area_ha.toFixed(4);
+        setMsg(row, "✔ Saved", false);
+        loadAll();            // polygon changed -> refresh map + chips
+        window.setTimeout(paintChips, 0);
+      } catch (e) {
+        setMsg(row, "❌ " + e.message, true);
+      }
+    });
+
+    // revert = reload the page (which re-reads the DB)
+    revertBtn.addEventListener("click", () => {
+      if (confirm("Discard unsaved changes and reload?")) {
+        window.location.reload();
+      }
+    });
+  });
+
+  // -------- initial load --------
+  loadAll();
+  window.setTimeout(paintChips, 0);
+})();
+</script>
+{% endblock %}

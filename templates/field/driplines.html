@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 workspace-title">Driplines</h1>
+<div class="workspace">
+
+  <div class="workspace-main">
+    <form method="post" class="workspace-toolbar">
+      <span class="title bi">
+    <span class="en">Dripline parameters</span><span class="ar">معايير خط التنقيط</span>
+  </span>
+      <label class="form-label mb-0 small">Emitter spacing (m)
+        <input type="number" name="emitter_spacing" value="{{ app_defaults.get('emitter_spacing_m', 0.5) }}" step="0.1"
+               class="form-control form-control-sm d-inline-block" style="width:100px;">
+      </label>
+      <button class="btn btn-success btn-sm" type="submit">Build driplines</button>
+    </form>
+
+    <div class="workspace-body flush">
+      {% if driplines %}
+      <table class="table table-sm table-striped mb-0">
+        <thead><tr><th>Name</th><th>Row</th><th>Length (m)</th><th>Emitters</th></tr></thead>
+        <tbody>{% for d in driplines[:200] %}
+        <tr><td>{{ d.name }}</td><td>{{ d.row_name }}</td>
+            <td>{{ "%.1f"|format(d.length_m) }}</td><td>{{ d.emitter_count }}</td></tr>
+        {% endfor %}</tbody>
+      </table>
+      {% if driplines|length > 200 %}
+      <p class="text-muted small m-3 mb-3">Showing first 200 of {{ driplines|length }}.</p>
+      {% endif %}
+      {% else %}
+      <div class="alert alert-info m-3 mb-3">No driplines yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+    <span class="en">Summary</span><span class="ar">الملخص</span>
+  </div>
+    <div class="side-body">
+      <div class="d-flex justify-content-between py-2">
+        <span class="text-muted">Driplines total</span><strong>{{ driplines|length }}</strong>
+      </div>
+    </div>
+  </aside>
+
+</div>
+{% endblock %}

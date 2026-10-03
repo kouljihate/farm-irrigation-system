@@ -1,0 +1,336 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Dhar</name>
+    <Placemark>
+      <name>P1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5843705,33.8452043,0 -4.5844248,33.8453557,0 -4.5844415,33.8454727,0 -4.5843932,33.8455986,0 -4.5843932,33.8459283,0 -4.5843503,33.8462045,0 -4.5846507,33.8461688,0 -4.5846454,33.8464384,0 -4.5845971,33.8466589,0 -4.5845823,33.8470288,0 -4.584758,33.8471223,0 -4.5849511,33.8471668,0 -4.5851282,33.8472582,0 -4.5851563,33.8473189,0 -4.585332,33.8473996,0 -4.5855305,33.8473824,0 -4.58567,33.8472916,0 -4.5858028,33.8476369,0 -4.587518,33.8467715,0 -4.5877835,33.8444312,0 -4.5881148,33.8444078,0 -4.5881288,33.844385,0 -4.588218,33.8443755,0 -4.5882985,33.8443956,0 -4.588159,33.8430679,0 -4.5867428,33.8430278,0 -4.5866847,33.8436423,0 -4.5866517,33.8438108,0 -4.5865551,33.843969,0 -4.5864102,33.8441015,0 -4.5867428,33.8443065,0 -4.5866141,33.8447788,0 -4.586303,33.8450639,0 -4.5861528,33.8451798,0 -4.5862386,33.84526,0 -4.5858082,33.8455451,0 -4.585672,33.8453958,0 -4.5855413,33.8452499,0 -4.5852355,33.8454131,0 -4.5848292,33.8455796,0 -4.5847601,33.8454465,0 -4.5846011,33.8450873,0 -4.5843705,33.8452043,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5858529,33.8462577,0 -4.585693,33.8456395,0 -4.5858082,33.8455451,0 -4.5855413,33.8452499,0 -4.5848292,33.8455796,0 -4.5844038,33.8457503,0 -4.5843503,33.8462045,0 -4.5846507,33.8461688,0 -4.5858529,33.8462577,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.586017,33.8468901,0 -4.5858529,33.8462577,0 -4.5846507,33.8461688,0 -4.5845823,33.8470288,0 -4.586017,33.8468901,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S3</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.587518,33.8467715,0 -4.5845823,33.8470288,0 -4.5851282,33.8472582,0 -4.5851563,33.8473189,0 -4.585332,33.8473996,0 -4.5855305,33.8473824,0 -4.58567,33.8472916,0 -4.5858028,33.8476369,0 -4.587518,33.8467715,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S4</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.587518,33.8467715,0 -4.5876081,33.8460082,0 -4.5858529,33.8462577,0 -4.586017,33.8468901,0 -4.587518,33.8467715,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S5</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5858529,33.8462577,0 -4.5876081,33.8460082,0 -4.5862386,33.84526,0 -4.585693,33.8456395,0 -4.5858529,33.8462577,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S6</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5876081,33.8460082,0 -4.5876923,33.8449525,0 -4.5866141,33.8447788,0 -4.5861528,33.8451798,0 -4.5876081,33.8460082,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S7</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5876923,33.8449525,0 -4.5878211,33.8444412,0 -4.5882985,33.8443956,0 -4.5882298,33.8438232,0 -4.5866517,33.8438108,0 -4.5864102,33.8441015,0 -4.5867428,33.8443065,0 -4.5866141,33.8447788,0 -4.5876923,33.8449525,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S8</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.588159,33.8430679,0 -4.5867428,33.8430278,0 -4.5866517,33.8438108,0 -4.5882298,33.8438232,0 -4.588159,33.8430679,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S1-Z1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5858529,33.8462577,0 -4.5846507,33.8461688,0 -4.5843503,33.8462045,0 -4.584383024397873,33.84592667903711,0 -4.585794272854523,33.84603103770273,0 -4.5858529,33.8462577,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S1-Z2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.585794272854523,33.84603103770273,0 -4.584383024397873,33.84592667903711,0 -4.5844038,33.8457503,0 -4.584548168169416,33.84569236947222,0 -4.585729265637419,33.845779708987195,0 -4.585794272854523,33.84603103770273,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S1-Z3</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5848292,33.8455796,0 -4.5855413,33.8452499,0 -4.5858082,33.8455451,0 -4.585693,33.8456395,0 -4.585729265637419,33.845779708987195,0 -4.584548168169416,33.84569236947222,0 -4.5848292,33.8455796,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S2-Z1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.586017,33.8468901,0 -4.5845823,33.8470288,0 -4.584601158456595,33.84679169075042,0 -4.585957440275728,33.846660571848695,0 -4.586017,33.8468901,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S2-Z2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.585957440275728,33.846660571848695,0 -4.584601158456595,33.84679169075042,0 -4.584621176380378,33.846540003404606,0 -4.5858942186639755,33.84641693170688,0 -4.585957440275728,33.846660571848695,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S2-Z3</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5846507,33.8461688,0 -4.5858529,33.8462577,0 -4.5858942186639755,33.84641693170688,0 -4.584621176380378,33.846540003404606,0 -4.5846507,33.8461688,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S3-Z1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5845823,33.8470288,0 -4.587518,33.8467715,0 -4.587224612616137,33.84691952789296,0 -4.584823137648226,33.84713000563565,0 -4.5845823,33.8470288,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S3-Z2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5851282,33.8472582,0 -4.584823137648226,33.84713000563565,0 -4.587224612616137,33.84691952789296,0 -4.586843553766314,33.84711179021142,0 -4.585129949599236,33.847261979383404,0 -4.5851282,33.8472582,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S3-Z3</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5858028,33.8476369,0 -4.58567,33.8472916,0 -4.5855305,33.8473824,0 -4.585332,33.8473996,0 -4.5851563,33.8473189,0 -4.585129949599236,33.847261979383404,0 -4.586843553766314,33.84711179021142,0 -4.5858028,33.8476369,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S4-Z1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5858529,33.8462577,0 -4.5876081,33.8460082,0 -4.587581414602388,33.84623427063259,0 -4.585908526394361,33.84647207009015,0 -4.5858529,33.8462577,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S4-Z2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.587553346390376,33.84647205605135,0 -4.585967035300736,33.84669754865439,0 -4.585908526394361,33.84647207009015,0 -4.587581414602388,33.84623427063259,0 -4.587553346390376,33.84647205605135,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S4-Z3</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.587518,33.8467715,0 -4.586017,33.8468901,0 -4.585967035300736,33.84669754865439,0 -4.587553346390376,33.84647205605135,0 -4.587518,33.8467715,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S5-Z1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5876081,33.8460082,0 -4.5858529,33.8462577,0 -4.585800494883611,33.846055093102244,0 -4.587302998487014,33.84584151365315,0 -4.5876081,33.8460082,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S5-Z2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.587302998487014,33.84584151365315,0 -4.585800494883611,33.846055093102244,0 -4.585737268155327,33.84581064805268,0 -4.586934893771485,33.845640406717656,0 -4.587302998487014,33.84584151365315,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S5-Z3</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.585693,33.8456395,0 -4.5862386,33.84526,0 -4.586934893771485,33.845640406717656,0 -4.585737268155327,33.84581064805268,0 -4.585693,33.8456395,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S6-Z1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5876081,33.8460082,0 -4.5861528,33.8451798,0 -4.586331202270538,33.84502471803493,0 -4.587627679556533,33.84576271142717,0 -4.5876081,33.8460082,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S6-Z2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.587627679556533,33.84576271142717,0 -4.586331202270538,33.84502471803493,0 -4.586534758012943,33.844847770597895,0 -4.58765001969354,33.84548261068325,0 -4.587627679556533,33.84576271142717,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S6-Z3</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5866141,33.8447788,0 -4.5876923,33.8449525,0 -4.58765001969354,33.84548261068325,0 -4.586534758012943,33.844847770597895,0 -4.5866141,33.8447788,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S7-Z1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5864102,33.8441015,0 -4.5866517,33.8438108,0 -4.5882298,33.8438232,0 -4.588265081761779,33.84411716332522,0 -4.586411988827333,33.84410260255443,0 -4.5864102,33.8441015,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S7-Z2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5882985,33.8443956,0 -4.5880159994343535,33.84442258371553,0 -4.586713955493349,33.844412352839875,0 -4.5867428,33.8443065,0 -4.586411988827333,33.84410260255443,0 -4.588265081761779,33.84411716332522,0 -4.5882985,33.8443956,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S7-Z3</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5878211,33.8444412,0 -4.5876923,33.8449525,0 -4.5866141,33.8447788,0 -4.586713955493349,33.844412352839875,0 -4.5880159994343535,33.84442258371553,0 -4.5878211,33.8444412,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S8-Z1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5882298,33.8438232,0 -4.5866517,33.8438108,0 -4.5866804534321775,33.84356366567074,0 -4.5882065959549685,33.84357565741226,0 -4.5882298,33.8438232,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S8-Z2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5867102209058785,33.84330781570469,0 -4.588182573577537,33.84331938478975,0 -4.5882065959549685,33.84357565741226,0 -4.5866804534321775,33.84356366567074,0 -4.5867102209058785,33.84330781570469,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>S8-Z3</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-4.5867428,33.8430278,0 -4.588159,33.8430679,0 -4.588182573577537,33.84331938478975,0 -4.5867102209058785,33.84330781570469,0 -4.5867428,33.8430278,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

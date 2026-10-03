@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 workspace-title">Rows</h1>
+<div class="workspace">
+
+  <div class="workspace-main">
+    <form method="post" class="workspace-toolbar">
+      <span class="title bi">
+    <span class="en">Row parameters</span><span class="ar">معايير الصفوف</span>
+  </span>
+      <label class="form-label mb-0 small">Spacing (m)
+        <input type="number" name="spacing" value="{{ app_defaults.get('row_spacing_m', 4) }}" step="0.1"
+               class="form-control form-control-sm d-inline-block" style="width:100px;">
+      </label>
+      <label class="form-label mb-0 small">First offset (m)
+        <input type="number" name="offset" value="{{ app_defaults.get('first_row_offset_m', 2) }}" step="0.1"
+               class="form-control form-control-sm d-inline-block" style="width:100px;">
+      </label>
+      <button class="btn btn-success btn-sm" type="submit">Build rows</button>
+    </form>
+
+    <div class="workspace-body flush">
+      {% if rows %}
+      <table class="table table-sm table-striped mb-0">
+        <thead><tr><th>Name</th><th>Zone</th><th>Length (m)</th></tr></thead>
+        <tbody>{% for r in rows[:200] %}
+        <tr><td>{{ r.name }}</td><td>{{ r.zone_name }}</td><td>{{ "%.1f"|format(r.length_m) }}</td></tr>
+        {% endfor %}</tbody>
+      </table>
+      {% if rows|length > 200 %}
+      <p class="text-muted small m-3 mb-3">Showing first 200 of {{ rows|length }}.</p>
+      {% endif %}
+      {% else %}
+      <div class="alert alert-info m-3 mb-3">No rows yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+    <span class="en">Summary</span><span class="ar">الملخص</span>
+  </div>
+    <div class="side-body">
+      <div class="d-flex justify-content-between py-2">
+        <span class="text-muted">Rows total</span><strong>{{ rows|length }}</strong>
+      </div>
+    </div>
+  </aside>
+
+</div>
+{% endblock %}

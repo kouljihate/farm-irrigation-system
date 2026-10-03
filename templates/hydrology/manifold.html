@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 workspace-title">Manifolds</h1>
+<div class="workspace">
+
+  <div class="workspace-main">
+    <form method="post" class="workspace-toolbar">
+      <span class="title bi">
+    <span class="en">Manifolds</span><span class="ar">المشعبات</span>
+  </span>
+      <button class="btn btn-success btn-sm" type="submit">Build manifolds</button>
+    </form>
+
+    <div class="workspace-body flush">
+      {% if manifolds %}
+      <table class="table table-striped mb-0">
+        <thead><tr><th>Name</th><th>Zone</th><th>Length (m)</th></tr></thead>
+        <tbody>{% for m in manifolds %}
+        <tr><td>{{ m.name }}</td><td>{{ m.zone_name }}</td><td>{{ "%.1f"|format(m.length_m) }}</td></tr>
+        {% endfor %}</tbody>
+      </table>
+      {% else %}
+      <div class="alert alert-info m-3 mb-3">No manifolds yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+    <span class="en">Summary</span><span class="ar">الملخص</span>
+  </div>
+    <div class="side-body">
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Manifolds</span><strong>{{ manifolds|length }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-2">
+        <span class="text-muted">Total length (m)</span>
+        <strong>{{ "%.1f"|format(manifolds|sum(attribute='length_m')) }}</strong>
+      </div>
+    </div>
+  </aside>
+
+</div>
+{% endblock %}

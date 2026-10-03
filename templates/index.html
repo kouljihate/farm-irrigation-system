@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="overview-wrapper">
+
+  <h1 class="overview-title">
+    <span class="en">Project Overview</span>
+    <span class="ar">نظرة عامة على المشروع</span>
+  </h1>
+
+  <div class="workspace">
+  <div class="workspace-main">
+  {# ================= MAP ================= #}
+  {% if has_data %}
+    <div class="workspace-toolbar">
+        <div class="d-flex gap-3 align-items-center">
+          <span class="title bi">
+            <span class="en">🗺 Project Map</span><span class="ar">خريطة المشروع</span>
+          </span>
+        </div>
+        <div class="overview-map-controls">
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovFitAll()">
+            <span class="en">Fit</span><span class="ar">ملاءمة</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovToggleLayer('property')">
+            <span class="en">Property</span><span class="ar">الملك</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovToggleLayer('sectors')">
+            <span class="en">Sectors</span><span class="ar">القطاعات</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovToggleLayer('zones')">
+            <span class="en">Zones</span><span class="ar">المناطق</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovToggleLayer('pipes')">
+            <span class="en">Pipes</span><span class="ar">الأنابيب</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovToggleLayer('rows')">
+            <span class="en">Rows</span><span class="ar">الصفوف</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovToggleLayer('trees')">
+            <span class="en">Trees</span><span class="ar">الأشجار</span>
+          </button>
+        </div>
+      </div>
+      <div id="overview-map" class="workspace-map"></div>
+  {% else %}
+    <div class="overview-empty">
+      <div class="icon">🗺</div>
+      <div class="en">No KML data loaded yet</div>
+      <div class="ar">لا توجد بيانات KML محمّلة بعد</div>
+      <a href="{{ url_for('project.initial') }}" class="btn btn-success btn-stack">
+        <span class="ar">📥 ارفع ملف KML</span>
+        <span class="en">📥 Upload KML</span>
+      </a>
+    </div>
+  {% endif %}
+
+  {# ================= METRIC CARDS + WORKFLOW (moved to side panel) ================= #}
+
+  <div class="overview-actions">
+    <div class="card overview-action-card">
+      <div class="card-header bi">
+        <span class="en">Quick actions</span>
+        <span class="ar">إجراءات سريعة</span>
+      </div>
+      <div class="list-group list-group-flush">
+        <a href="{{ url_for('project.initial') }}" class="list-group-item list-group-item-action overview-action-item">
+          <span class="en">📥 Upload initial KML</span>
+          <span class="ar">📥 رفع ملف KML الأولي</span>
+        </a>
+        <a href="{{ url_for('geometry.zones') }}" class="list-group-item list-group-item-action overview-action-item">
+          <span class="en">🔷 Build zones</span>
+          <span class="ar">🔷 إنشاء المناطق</span>
+        </a>
+        <a href="{{ url_for('field.rows') }}" class="list-group-item list-group-item-action overview-action-item">
+          <span class="en">➖ Build rows</span>
+          <span class="ar">➖ إنشاء الصفوف</span>
+        </a>
+        <a href="{{ url_for('field.trees') }}" class="list-group-item list-group-item-action overview-action-item">
+          <span class="en">🌳 Place trees</span>
+          <span class="ar">🌳 زرع الأشجار</span>
+        </a>
+        <a href="{{ url_for('map_view.map_page') }}" class="list-group-item list-group-item-action overview-action-item">
+          <span class="en">🗺 Open full map</span>
+          <span class="ar">🗺 فتح الخريطة الكاملة</span>
+        </a>
+        <a href="{{ url_for('project.close_project') }}"
+           class="list-group-item list-group-item-action overview-action-item text-danger"
+           data-confirm
+           data-confirm-method="GET"
+           data-confirm-en="Close the current project? / إغلاق المشروع الحالي؟"
+           data-confirm-ar="إغلاق المشروع الحالي؟"
+           data-confirm-title-en="Close project"
+           data-confirm-title-ar="إغلاق المشروع"
+           data-confirm-ok-en="Close"
+           data-confirm-ok-ar="إغلاق">
+          <span class="en">🚪 Close project</span>
+          <span class="ar">🚪 إغلاق المشروع</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /.workspace-main -->
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+    <span class="en">Summary</span><span class="ar">الملخص</span>
+  </div>
+    <div class="side-body">
+      <div class="overview-cards">
+        {% for label_en, label_ar, key, icon in [
+            ('Sectors',   'القطاعات',    'sectors',   '📐'),
+            ('Zones',     'المناطق',     'zones',     '🔷'),
+            ('Valves',    'الصمامات',    'valves',    '🔴'),
+            ('Pipes',     'الأنابيب',    'pipes',     '〰️'),
+            ('Rows',      'الصفوف',      'rows',      '➖'),
+            ('Trees',     'الأشجار',     'trees',     '🌳'),
+            ('Driplines', 'خطوط التنقيط', 'driplines', '💧'),
+            ('Revisions', 'المراجعات',   'revisions', '📜'),
+        ] %}
+          <div class="overview-card">
+            <div class="overview-card-icon">{{ icon }}</div>
+            <div class="overview-card-value">{{ summary.get(key, 0) }}</div>
+            <div class="overview-card-labels">
+              <span class="en">{{ label_en }}</span>
+              <span class="ar">{{ label_ar }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="side-title bi">
+    <span class="en">Workflow</span><span class="ar">مراحل العمل</span>
+  </div>
+    <div class="side-body">
+      <div class="overview-alert small">
+        <div class="en">
+          <strong>Workflow:</strong> initialize the project (Step 01), then run
+          each step in order — Geometry → Hydrology → Field → Export.
+        </div>
+        <div class="ar">
+          <strong>سير العمل:</strong> قم بتهيئة المشروع (الخطوة 01) ثم نفذ كل
+          خطوة بالترتيب — الهندسة ← الهيدرولوجيا ← الحقل ← التصدير.
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div><!-- /.workspace -->
+
+</div><!-- /.overview-wrapper -->
+
+{% endblock %}
+
+{% block scripts %}
+{% if has_data %}
+<script>
+  window.OVERVIEW_API = {
+    geojson: "{{ url_for('api.geojson') }}",
+    bounds:  "{{ url_for('api.bounds') }}"
+  };
+
+  (function () {
+    // init map
+    const map = L.map("overview-map", {
+      zoomControl: true,
+      attributionControl: true
+    }).setView([33.8455, -4.5860], 15);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 20,
+      attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    // layer groups
+    const layers = {
+      property:  L.layerGroup().addTo(map),
+      water_points: L.layerGroup().addTo(map),
+      basins:    L.layerGroup().addTo(map),
+      sectors:   L.layerGroup().addTo(map),
+      zones:     L.layerGroup(),
+      pipes:     L.layerGroup().addTo(map),
+      rows:      L.layerGroup(),
+      valves:    L.layerGroup().addTo(map),
+      trees:     L.layerGroup(),
+      driplines: L.layerGroup(),
+      manifolds: L.layerGroup()
+    };
+
+    const colors = {
+      property:  "#000000",
+      water_points: "#e91e63",
+      basins:    "#0288d1",
+      sectors:   "#00bcd4",
+      zones:     "#3f51b5",
+      pipes:     "#ff0000",
+      rows:      "#00c853",
+      valves:    "#9c27b0",
+      trees:     "#2e7d32",
+      driplines: "#00897b",
+      manifolds: "#ff9800"
+    };
+
+    function styleFor(coll) {
+      return {
+        color: colors[coll] || "#888",
+        weight: coll === "property" ? 2 : 1.5,
+        fillOpacity: coll === "zones" ? 0.15 : 0,
+        opacity: 0.9
+      };
+    }
+
+    function addFeature(f) {
+      const coll = f.properties.collection;
+      if (!layers[coll]) return;
+      const g = f.geometry;
+      const col = colors[coll] || "#888";
+      const nm = f.properties.name || "";
+
+      if (g.type === "Point") {
+        const ll = [g.coordinates[1], g.coordinates[0]];
+        const m = L.circleMarker(ll, {
+          radius: coll === "trees" ? 2 : 5,
+          color: col,
+          fillColor: col,
+          fillOpacity: 0.85,
+          weight: 1
+        }).bindTooltip(nm);
+        layers[coll].addLayer(m);
+      } else if (g.type === "LineString") {
+        const ll = g.coordinates.map(c => [c[1], c[0]]);
+        const line = L.polyline(ll, styleFor(coll)).bindTooltip(nm);
+        layers[coll].addLayer(line);
+      } else if (g.type === "Polygon") {
+        const ll = g.coordinates[0].map(c => [c[1], c[0]]);
+        const poly = L.polygon(ll, styleFor(coll)).bindTooltip(nm);
+        layers[coll].addLayer(poly);
+      }
+    }
+
+    fetch(window.OVERVIEW_API.geojson)
+      .then(r => r.json())
+      .then(fc => {
+        if (!fc.features || !fc.features.length) {
+          return;
+        }
+        fc.features.forEach(addFeature);
+        // fit to property bounds
+        fetch(window.OVERVIEW_API.bounds)
+          .then(r => r.json())
+          .then(d => {
+            if (d.bounds) {
+              map.fitBounds(d.bounds, { padding: [20, 20] });
+            }
+          });
+      })
+      .catch(err => console.error("Map load failed:", err));
+
+    // controls
+    window.ovFitAll = function () {
+      fetch(window.OVERVIEW_API.bounds)
+        .then(r => r.json())
+        .then(d => {
+          if (d.bounds) map.fitBounds(d.bounds, { padding: [20, 20] });
+        });
+    };
+
+    window.ovToggleLayer = function (name) {
+      if (!layers[name]) return;
+      if (map.hasLayer(layers[name])) {
+        map.removeLayer(layers[name]);
+      } else {
+        map.addLayer(layers[name]);
+      }
+    };
+  })();
+</script>
+{% endif %}
+{% endblock %}

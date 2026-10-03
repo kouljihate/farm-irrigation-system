@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Projects · {{ app_title }}{% endblock %}
+{% block content %}
+
+<h1 class="h3 workspace-title bi">
+  <span class="en">Projects</span><span class="ar">المشاريع</span>
+</h1>
+
+<div class="workspace">
+
+  <div class="workspace-main">
+    <div class="workspace-toolbar">
+      <span class="title bi">
+        <span class="en">Saved projects</span><span class="ar">المشاريع المحفوظة</span>
+        <span class="badge bg-secondary">{{ projects|length }}</span>
+      </span>
+      <span class="vr"></span>
+      {% if project_id != '(none)' %}
+        <a class="btn btn-sm btn-primary" href="{{ url_for('project.index') }}">
+          <span class="ar">لوحة المشروع</span><span class="en">Dashboard</span>
+        </a>
+      {% endif %}
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('map_view.map_page') }}">
+        <span class="ar">الخريطة</span><span class="en">Map</span>
+      </a>
+    </div>
+
+    <div class="workspace-body flush">
+      {% if projects %}
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th><span class="bi"><span class="en">Name</span><span class="ar">الاسم</span></span></th>
+            <th><span class="bi"><span class="en">Project ID</span><span class="ar">المعرف</span></span></th>
+            <th><span class="bi"><span class="en">Updated</span><span class="ar">آخر تحديث</span></span></th>
+            <th class="text-end"><span class="bi"><span class="en">Actions</span><span class="ar">إجراءات</span></span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in projects %}
+          <tr>
+            <td>
+              <strong>{{ p.name or p.project_id }}</strong>
+              {% if p.project_id == project_id %}
+                <span class="badge bg-success ms-1">
+                  <span class="en">open</span><span class="ar">مفتوح</span>
+                </span>
+              {% endif %}
+            </td>
+            <td><code>{{ p.project_id }}</code></td>
+            <td class="text-muted small">
+              {{ p.updated_at|string|default('—', true) }}
+            </td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-2">
+                <a class="btn btn-sm btn-success btn-stack"
+                   href="{{ url_for('home.open_project', pid=p.project_id) }}">
+                  <span class="ar">فتح</span><span class="en">Open</span>
+                </a>
+                <form method="post"
+                      action="{{ url_for('home.delete_project', pid=p.project_id) }}"
+                      class="js-delete-form d-inline">
+                  <button type="button" class="btn btn-sm btn-outline-danger"
+                          data-confirm
+                          data-confirm-method="POST"
+                          data-confirm-en="Delete project {{ p.project_id }}? This cannot be undone."
+                          data-confirm-ar="حذف المشروع {{ p.project_id }}؟ لا يمكن التراجع."
+                          data-confirm-title-en="Delete Project"
+                          data-confirm-title-ar="حذف المشروع"
+                          data-confirm-ok-en="Delete"
+                          data-confirm-ok-ar="حذف"
+                          data-confirm-danger>✕</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="alert alert-info m-3 mb-3 bi">
+          <span class="en">No saved projects yet — create one on the right.</span>
+          <span class="ar">لا توجد مشاريع محفوظة بعد — أنشئ مشروعًا من اليمين.</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+      <span class="en">New project</span><span class="ar">مشروع جديد</span>
+    </div>
+    <div class="side-body">
+      <p class="bi small text-muted">
+        <span class="en">
+          Create an empty project, then upload the KML with the property
+          boundary (P1) and the water point on the next screen.
+        </span>
+        <span class="ar">
+          أنشئ مشروعًا فارغًا، ثم ارفع ملف KML الذي يحتوي على حدود الملك (P1)
+          ونقطة المياه في الشاشة التالية.
+        </span>
+      </p>
+
+      <form method="post" action="{{ url_for('home.new_project') }}">
+        <div class="mb-3">
+          <label class="form-label bi" for="new-project-id">
+            <span class="en">Project ID</span><span class="ar">معرف المشروع</span>
+          </label>
+          <input class="form-control form-control-sm" id="new-project-id" name="project_id"
+                 placeholder="farm_v1" maxlength="100" required>
+        </div>
+        <button class="btn btn-primary btn-sm w-100 btn-stack" type="submit">
+          <span class="ar">إنشاء المشروع</span>
+          <span class="en">Create project</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+
+</div>
+
+{% endblock %}

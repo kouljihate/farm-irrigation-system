@@ -1,0 +1,56 @@
+{% set sections = [
+  ('project.index',      'Project',    'المشروع',
+    ['project.initial','project.water','project.settings','project.checks']),
+  ('geometry.sectors',   'Geometry',   'الهندسة',
+    ['geometry.sectors','geometry.zones','geometry.valves']),
+  ('hydrology.mainline', 'Hydrology',  'الهيدرولوجيا',
+    ['hydrology.mainline','hydrology.submains','hydrology.manifold']),
+  ('field.rows',         'Field',      'الحقل',
+    ['field.rows','field.trees','field.driplines']),
+  ('export.bom',         'Export',     'التصدير',
+    ['export.bom','export.kml','export.dxf','export.geojson','export.trees_csv']),
+] %}
+
+<nav class="app-section-nav">
+  <ul class="section-nav-list">
+    {% for href, label_en, label_ar, children in sections %}
+      {% set active = request.endpoint in children or request.endpoint == href %}
+      {% set no_project = project_id == '(none)' or project_id == '' %}
+      <li>
+        <a href="{{ url_for(href) }}"
+           class="section-nav-btn {% if active %}active{% endif %} {% if no_project %}disabled{% endif %}"
+           {% if no_project %}tabindex="-1" aria-disabled="true"{% endif %}>
+          <span class="ar">{{ label_ar }}</span>
+          <span class="en">{{ label_en }}</span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</nav>
+
+{% if request.endpoint in ['geometry.sectors', 'geometry.zones', 'geometry.valves'] %}
+<ul class="nav nav-tabs pt-2">
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='geometry.sectors' %}active{% endif %}" href="{{ url_for('geometry.sectors') }}"><span class="ar">القطاعات</span><span class="en">Sectors</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='geometry.zones' %}active{% endif %}" href="{{ url_for('geometry.zones') }}"><span class="ar">المناطق</span><span class="en">Zones</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='geometry.valves' %}active{% endif %}" href="{{ url_for('geometry.valves') }}"><span class="ar">الصمامات</span><span class="en">Valves</span></a></li>
+</ul>
+{% elif request.endpoint in ['hydrology.mainline', 'hydrology.submains', 'hydrology.manifold'] %}
+<ul class="nav nav-tabs pt-2">
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='hydrology.mainline' %}active{% endif %}" href="{{ url_for('hydrology.mainline') }}"><span class="ar">الخط الرئيسي</span><span class="en">Mainline</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='hydrology.submains' %}active{% endif %}" href="{{ url_for('hydrology.submains') }}"><span class="ar">الخطوط الفرعية</span><span class="en">Sub-mains</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='hydrology.manifold' %}active{% endif %}" href="{{ url_for('hydrology.manifold') }}"><span class="ar">المشعب</span><span class="en">Manifold</span></a></li>
+</ul>
+{% elif request.endpoint in ['field.rows', 'field.trees', 'field.driplines'] %}
+<ul class="nav nav-tabs pt-2">
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='field.rows' %}active{% endif %}" href="{{ url_for('field.rows') }}"><span class="ar">الصفوف</span><span class="en">Rows</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='field.trees' %}active{% endif %}" href="{{ url_for('field.trees') }}"><span class="ar">الأشجار</span><span class="en">Trees</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='field.driplines' %}active{% endif %}" href="{{ url_for('field.driplines') }}"><span class="ar">خطوط التنقيط</span><span class="en">Driplines</span></a></li>
+</ul>
+{% elif request.endpoint in ['project.initial', 'project.water', 'project.settings', 'project.checks'] %}
+<ul class="nav nav-tabs pt-2">
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='project.initial' %}active{% endif %}" href="{{ url_for('project.initial') }}"><span class="ar">التهيئة</span><span class="en">Initialize</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='project.water' %}active{% endif %}" href="{{ url_for('project.water') }}"><span class="ar">المصدر والحوض</span><span class="en">Water & Basin</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='project.settings' %}active{% endif %}" href="{{ url_for('project.settings') }}"><span class="ar">الإعدادات</span><span class="en">Settings</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='project.checks' %}active{% endif %}" href="{{ url_for('project.checks') }}"><span class="ar">فحوصات</span><span class="en">Checks</span></a></li>
+</ul>
+{% endif %}

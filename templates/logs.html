@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 workspace-title">📜 Logs &amp; Revisions</h1>
+<div class="workspace">
+
+  <div class="workspace-main">
+    <div class="workspace-toolbar"><span class="title bi">
+    <span class="en">Logs &amp; revisions</span><span class="ar">السجلات والمراجعات</span>
+  </span></div>
+    <div class="workspace-body">
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-app">Application log</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-mongo">Audit log</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rev">Revisions</button></li>
+      </ul>
+      <div class="tab-content pt-3">
+        <div class="tab-pane fade show active" id="tab-app">
+          <pre style="max-height:60vh; overflow:auto; background:#111; color:#eee; padding:1rem; border-radius:6px; font-size:0.8rem;">{% for line in file_lines %}{{ line }}{% endfor %}</pre>
+        </div>
+        <div class="tab-pane fade" id="tab-mongo">
+          <table class="table table-sm table-striped">
+            <thead><tr><th>Time</th><th>Step</th><th>Action</th><th>Status</th><th>Duration</th><th>Items</th></tr></thead>
+            <tbody>
+            {% for l in mongo_logs %}
+            <tr><td>{{ l.timestamp }}</td><td>{{ l.step }}</td><td>{{ l.action }}</td>
+                <td><span class="badge bg-{{ 'success' if l.status=='ok' else 'danger' }}">{{ l.status }}</span></td>
+                <td>{{ l.duration_ms }}</td><td>{{ l.items_created }}</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="tab-pane fade" id="tab-rev">
+          <table class="table table-sm table-striped">
+            <thead><tr><th>#</th><th>Step</th><th>Note</th><th>When</th></tr></thead>
+            <tbody>{% for r in revisions %}
+            <tr><td>{{ r.revision_id }}</td><td>{{ r.step }}</td><td>{{ r.note }}</td><td>{{ r.created_at }}</td></tr>
+            {% endfor %}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+    <span class="en">Summary</span><span class="ar">الملخص</span>
+  </div>
+    <div class="side-body">
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Log lines</span><strong>{{ file_lines|length }}</strong>
+      </div>
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Audit entries</span><strong>{{ mongo_logs|length }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-2">
+        <span class="text-muted">Revisions</span><strong>{{ revisions|length }}</strong>
+      </div>
+    </div>
+  </aside>
+
+</div>
+{% endblock %}

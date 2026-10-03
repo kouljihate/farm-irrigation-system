@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Create Account · {{ app_title }}{% endblock %}
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-card-head bi">
+      <span class="en">Create Account</span>
+      <span class="ar">إنشاء حساب</span>
+    </div>
+    <div class="auth-card-body">
+      <form method="post" novalidate>
+        <div class="mb-3">
+          <label for="username" class="form-label bi">
+            <span class="en">Username</span>
+            <span class="ar">اسم المستخدم</span>
+          </label>
+          <input type="text" class="form-control" id="username" name="username"
+                 autocomplete="username" required autofocus minlength="3" maxlength="50">
+          <div class="form-text bi">
+            <span class="en">3-50 characters, letters and numbers only</span>
+            <span class="ar">٣-٥٠ حرفاً، حروف وأرقام فقط</span>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label bi">
+            <span class="en">Email (optional)</span>
+            <span class="ar">البريد الإلكتروني (اختياري)</span>
+          </label>
+          <input type="email" class="form-control" id="email" name="email"
+                 autocomplete="email" maxlength="100">
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label bi">
+            <span class="en">Password</span>
+            <span class="ar">كلمة المرور</span>
+          </label>
+          <input type="password" class="form-control" id="password" name="password"
+                 autocomplete="new-password" required minlength="8">
+          <div class="form-text bi">
+            <span class="en">At least 8 characters</span>
+            <span class="ar">٨ أحرف على الأقل</span>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="confirm" class="form-label bi">
+            <span class="en">Confirm Password</span>
+            <span class="ar">تأكيد كلمة المرور</span>
+          </label>
+          <input type="password" class="form-control" id="confirm" name="confirm"
+                 autocomplete="new-password" required>
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary btn-stack">
+            <span class="ar">إنشاء الحساب</span>
+            <span class="en">Create Account</span>
+          </button>
+        </div>
+      </form>
+      <div class="text-center mt-3">
+        <small class="text-muted bi">
+          <span class="en">Already have an account?</span>
+          <span class="ar">لديك حساب بالفعل؟</span>
+          <a href="{{ url_for('auth.login') }}" class="ms-1">
+            <span class="en">Sign In</span>
+            <span class="ar">تسجيل الدخول</span>
+          </a>
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

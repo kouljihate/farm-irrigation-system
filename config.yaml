@@ -1,0 +1,39 @@
+# Global configuration for the Farm Irrigation Workbench
+
+app:
+  title: "Farm Irrigation Workbench"
+  version: "2.0.0"
+
+mongodb:
+  host: "localhost"
+  port: 27017
+  database: "farm_irrigation"
+
+paths:
+  imports: "imports"
+  exports: "exports"
+
+# Default build parameters pre-filled on each step page.
+defaults:
+  row_spacing_m: 4.0
+  tree_spacing_m: 4.0
+  first_row_offset_m: 2.0
+  pipe_main_diameter_mm: 75
+  pipe_submain_diameter_mm: 32
+  mainline_offset_m: 5
+  submain_offset_m: 5
+  emitter_spacing_m: 0.5
+
+# Engineering assumptions used by the design checks (Design checks page).
+# Adjust these to your crop, emitters and terrain before trusting the report.
+hydraulics:
+  emitter_discharge_lph: 2.0      # nominal dripper discharge
+  operating_hours_per_day: 6.0    # irrigation window
+  demand_margin: 1.15             # design margin over peak demand
+  hazen_williams_c: 150           # friction factor (HDPE PE100)
+  design_slope: 0.002             # assumed pipe slope 1:500
+  min_velocity_ms: 0.3            # below this: sediment / poor uniformity
+  max_velocity_ms: 2.0            # above this: erosion / emitter blow-out
+  oversized_below_ratio: 0.8      # velocity under 80% of max => oversized
+  undersized_above_ratio: 1.25    # velocity over 125% of max => undersized
+  max_headloss_m: 10.0            # friction loss ceiling per pipe

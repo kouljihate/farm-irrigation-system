@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Design Checks · {{ app_title }}{% endblock %}
+{% block content %}
+
+<h1 class="h3 workspace-title bi">
+  <span class="en">Design checks</span><span class="ar">فحوصات التصميم</span>
+  — <code>{{ project_id }}</code>
+</h1>
+
+<div class="workspace">
+
+  <div class="workspace-main">
+    <div class="workspace-toolbar">
+      <span class="title bi">
+        <span class="en">Findings</span><span class="ar">النتائج</span>
+      </span>
+      <span class="badge bg-danger" title="Errors">
+        {{ report.summary.errors }} <span class="en">error</span><span class="ar">خطأ</span>
+      </span>
+      <span class="badge bg-warning text-dark">
+        {{ report.summary.warnings }} <span class="en">warn</span><span class="ar">تحذير</span>
+      </span>
+      <span class="vr"></span>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('export.bom') }}">
+        <span class="ar">قائمة المواد</span><span class="en">Bill of materials</span>
+      </a>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('map_view.map_page') }}">
+        <span class="ar">الخريطة</span><span class="en">Map</span>
+      </a>
+    </div>
+
+    <div class="workspace-body flush">
+      {% if report.findings %}
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th style="width: 110px;">
+              <span class="bi"><span class="en">Severity</span><span class="ar">الخطورة</span></span>
+            </th>
+            <th>
+              <span class="bi"><span class="en">Finding</span><span class="ar">النتيجة</span></span>
+            </th>
+            <th style="width: 160px;">
+              <span class="bi"><span class="en">Entity</span><span class="ar">العنصر</span></span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in report.findings %}
+          <tr>
+            <td>
+              {% if f.severity == 'error' %}
+                <span class="badge bg-danger">
+                  <span class="en">Error</span><span class="ar">خطأ</span>
+                </span>
+              {% elif f.severity == 'warn' %}
+                <span class="badge bg-warning text-dark">
+                  <span class="en">Warning</span><span class="ar">تحذير</span>
+                </span>
+              {% else %}
+                <span class="badge bg-secondary">
+                  <span class="en">Info</span><span class="ar">معلومة</span>
+                </span>
+              {% endif %}
+            </td>
+            <td><small>{{ f.message }}</small></td>
+            <td><code class="small">{{ f.entity or '—' }}</code></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="alert alert-success m-3 mb-3 bi">
+          <span class="en">No findings — nothing to fix.</span>
+          <span class="ar">لا توجد نتائج — لا شيء يحتاج إلى إصلاح.</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="workspace-side">
+    <div class="side-title bi">
+      <span class="en">Design summary</span><span class="ar">ملخص التصميم</span>
+    </div>
+    <div class="side-body">
+      <div class="d-flex justify-content-between py-1">
+        <span class="text-muted">Emitters</span>
+        <strong>{{ report.summary.emitters }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="text-muted">Design flow (m³/h)</span>
+        <strong>{{ "%.2f"|format(report.summary.design_flow_m3h) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="text-muted">Daily volume (m³)</span>
+        <strong>{{ "%.2f"|format(report.summary.daily_volume_m3) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="text-muted">Applied depth (mm)</span>
+        <strong>{{ "%.2f"|format(report.summary.applied_depth_mm) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="text-muted">Irrigated area (m²)</span>
+        <strong>{{ "%.0f"|format(report.summary.irrigated_area_m2) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="text-muted">Source capacity (L/s)</span>
+        <strong>{{ "%.2f"|format(report.summary.source_total_lps) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="text-muted">Required (L/s)</span>
+        <strong>{{ "%.2f"|format(report.summary.required_lps) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="text-muted">Worst headloss (m)</span>
+        <strong>{{ "%.1f"|format(report.summary.worst_headloss_m) }}</strong>
+      </div>
+    </div>
+
+    <div class="side-title border-top static bi">
+      <span class="en">Assumptions</span><span class="ar">الافتراضات</span>
+    </div>
+    <div class="side-body">
+      <p class="small text-muted mb-2">
+        From <code>config.yaml</code> → <code>hydraulics</code>. Change them
+        to match your crop and terrain.
+      </p>
+      <dl class="row small mb-0">
+        {% for key, value in assumptions.items() %}
+        <dt class="col-7 text-muted">{{ key.replace('_', ' ') }}</dt>
+        <dd class="col-5 text-end mb-0">{{ value }}</dd>
+        {% endfor %}
+      </dl>
+    </div>
+
+    {% if report.pipes %}
+    <div class="side-title border-top static bi">
+      <span class="en">Pipe velocities</span><span class="ar">سرعات الأنابيب</span>
+    </div>
+    <div class="side-body">
+      <table class="table table-sm mb-0 small">
+        <tbody>
+          {% for r in report.pipes %}
+          <tr>
+            <td><code>{{ r.name }}</code></td>
+            <td class="text-end">{{ "%.2f"|format(r.velocity_ms) }} m/s</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </aside>
+
+</div>
+
+{% endblock %}
