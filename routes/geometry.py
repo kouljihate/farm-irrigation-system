@@ -16,7 +16,6 @@ from core.async_tasks import get_project_tasks, get_task_status, submit_async_ta
 from core.geometry import (
     centroid_lonlat, clean_polygon, fall_direction, first_ring, ring_area_m2,
 )
-from core.valve_rules import build_mv_groups, zv_name
 from core.validation import (
     SectorAdd, SectorCodes, SectorSave, SectorSplit, ZoneBuild, validate_form,
 )
