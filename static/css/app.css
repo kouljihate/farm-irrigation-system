@@ -1861,3 +1861,14 @@ input[type="reset"]:hover::after {
     min-width: 248px;
   }
 }
+
+/* Flaticon UIcons application standard */
+.fi { display:inline-flex; align-items:center; justify-content:center; line-height:1; vertical-align:middle; }
+.app-btn-icon .fi { font-size:1.15rem; }
+.btn-sm .app-btn-icon .fi { font-size:1rem; }
+.sidebar-icon .fi { font-size:1.45rem; }
+.map-action-icon .fi { font-size:1.2rem; }
+.map-fit-btn .fi, .sidebar-pin-btn .fi { font-size:1.15rem; }
+.table td .btn .app-table-icon, .table th .btn .app-table-icon, .table .row-actions .btn .app-table-icon { font-size:1.05rem; line-height:1; }
+.flaticon-attribution { font-size:.62rem; opacity:.55; white-space:nowrap; }
+.flaticon-attribution a { color:inherit; }
