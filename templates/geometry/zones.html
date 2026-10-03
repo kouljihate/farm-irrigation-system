@@ -285,6 +285,14 @@
 
   function addFeature(f) {
     const coll = f.properties.collection;
+
+    // Shared map engine renders imported KML/GeoJSON geometry such as the
+    // property boundary, well, basin and sectors. This page only customizes zones.
+    if (coll !== "zones") {
+      sharedMap.addGeoJSONFeature(f);
+      return;
+    }
+
     const layer = layers[coll];
     if (!layer) return;
 
