@@ -9,6 +9,8 @@
         href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.2/dist/journal/bootstrap.min.css">
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet"
+        href="https://cdn-uicons.flaticon.com/4.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css', v='10') }}">
   {% block head %}{% endblock %}
 </head>
@@ -26,7 +28,7 @@
           ☰
         </button>
         <a class="app-title en" href="{{ url_for('home.home') }}">
-          🌱 {{ app_title }}
+          <i class="fi fi-rr-leaf" aria-hidden="true"></i> {{ app_title }}
         </a>
       </div>
 
@@ -51,16 +53,16 @@
       <div class="d-flex align-items-center gap-2">
         <a class="btn btn-sm btn-outline-light btn-stack"
            href="{{ url_for('map_view.map_page') }}">
-          <span class="ar">الخريطة 🗺</span>
-          <span class="en">Map 🗺</span>
+          <span class="ar">الخريطة</span>
+          <span class="en">Map</span>
         </a>
         <a class="btn btn-sm btn-outline-light btn-stack"
            href="{{ url_for('logs.index') }}">
-          <span class="ar">السجل 📜</span>
-          <span class="en">Logs 📜</span>
+          <span class="ar">السجل</span>
+          <span class="en">Logs</span>
         </a>
         <a class="app-title ar d-none d-md-inline" href="{{ url_for('home.home') }}">
-          منصة الري الزراعي 🌱
+          منصة الري الزراعي <i class="fi fi-rr-leaf" aria-hidden="true"></i>
         </a>
       </div>
 
@@ -73,7 +75,7 @@
 
     <!-- ---------- SIDEBAR ---------- -->
   <aside class="app-sidebar" id="app-sidebar">
-    <button class="sidebar-pin-btn" id="sidebar-pin-btn" aria-label="Pin sidebar" title="Pin sidebar">📌</button>
+    <button class="sidebar-pin-btn" id="sidebar-pin-btn" aria-label="Pin sidebar" title="Pin sidebar"><i class="fi fi-rr-pin" aria-hidden="true"></i></button>
 
     <div class="sidebar-section">
       <div class="sidebar-section-title">
@@ -83,42 +85,42 @@
 
       <nav class="sidebar-nav">
         <a class="sidebar-link" href="{{ url_for('project.initial') }}">
-          <span class="sidebar-icon">📥</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-upload" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">رفع ملف KML</span>
             <span class="sidebar-en">Upload KML</span>
           </span>
         </a>
         <a class="sidebar-link" href="{{ url_for('geometry.zones') }}">
-          <span class="sidebar-icon">🔷</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-diamond" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">إنشاء المناطق</span>
             <span class="sidebar-en">Build zones</span>
           </span>
         </a>
         <a class="sidebar-link" href="{{ url_for('field.rows') }}">
-          <span class="sidebar-icon">➖</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-minus" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">إنشاء الصفوف</span>
             <span class="sidebar-en">Build rows</span>
           </span>
         </a>
         <a class="sidebar-link" href="{{ url_for('field.trees') }}">
-          <span class="sidebar-icon">🌳</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-tree" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">زرع الأشجار</span>
             <span class="sidebar-en">Place trees</span>
           </span>
         </a>
         <a class="sidebar-link" href="{{ url_for('project.checks') }}">
-          <span class="sidebar-icon">🧪</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-test-tube" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">فحوصات التصميم</span>
             <span class="sidebar-en">Design checks</span>
           </span>
         </a>
         <a class="sidebar-link" href="{{ url_for('map_view.map_page') }}">
-          <span class="sidebar-icon">🗺</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-map-marker" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">فتح الخريطة</span>
             <span class="sidebar-en">Open map</span>
@@ -134,7 +136,7 @@
            data-confirm-ok-en="Close"
            data-confirm-ok-ar="إغلاق"
            data-confirm-danger>
-          <span class="sidebar-icon">🚪</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-sign-out-alt" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">إغلاق المشروع</span>
             <span class="sidebar-en">Close Project</span>
@@ -150,35 +152,35 @@
       </div>
       <nav class="sidebar-nav">
         <a class="sidebar-link" href="{{ url_for('export.kml') }}">
-          <span class="sidebar-icon">📄</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-document" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">تنزيل KML</span>
             <span class="sidebar-en">Download KML</span>
           </span>
         </a>
         <a class="sidebar-link" href="{{ url_for('export.dxf') }}">
-          <span class="sidebar-icon">📐</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-ruler-combined" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">تنزيل DXF</span>
             <span class="sidebar-en">Download DXF</span>
           </span>
         </a>
         <a class="sidebar-link" href="{{ url_for('export.geojson') }}">
-          <span class="sidebar-icon">🌐</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-globe" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">تنزيل GeoJSON</span>
             <span class="sidebar-en">Download GeoJSON</span>
           </span>
         </a>
         <a class="sidebar-link" href="{{ url_for('export.trees_csv') }}">
-          <span class="sidebar-icon">📊</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-chart-histogram" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">قائمة الأشجار</span>
             <span class="sidebar-en">Trees CSV</span>
           </span>
         </a>
         <a class="sidebar-link" href="{{ url_for('export.bom') }}">
-          <span class="sidebar-icon">📦</span>
+          <span class="sidebar-icon"><i class="fi fi-rr-box" aria-hidden="true"></i></span>
           <span class="sidebar-text">
             <span class="sidebar-ar">قائمة المواد</span>
             <span class="sidebar-en">Bill of Materials</span>
@@ -250,7 +252,7 @@
         const isPinned = sb.classList.toggle("collapsed");
         layout.classList.toggle("sidebar-pinned", !isPinned);
         pinBtn.classList.toggle("pinned", !isPinned);
-        pinBtn.textContent = isPinned ? "📌" : "📍";
+        pinBtn.innerHTML = isPinned ? '<i class="fi fi-rr-pin" aria-hidden="true"></i>' : '<i class="fi fi-rr-map-marker" aria-hidden="true"></i>';
         pinBtn.title = isPinned ? "Pin sidebar" : "Unpin sidebar";
         pinBtn.setAttribute("aria-label", isPinned ? "Pin sidebar" : "Unpin sidebar");
       });
@@ -273,102 +275,60 @@
     }
 
 
-    // Global button standard: normalize every non-table bilingual button
-    // to the same split text/icon design used by Geometry/Sectors.
-    document.querySelectorAll(".btn:not(.btn-close):not(.icon-only):not(.table .btn)").forEach(function (btn) {
-      if (btn.closest(".table")) return;
-      if (btn.classList.contains("app-btn-ready")) return;
+    // Global application icon standard: Flaticon UIcons Regular Rounded.
+    const iconMap = [
+      [/delete|remove|trash|حذف/i, "fi-rr-trash"],
+      [/edit|rename|تعديل|تسمية/i, "fi-rr-pencil"],
+      [/save|حفظ/i, "fi-rr-disk"],
+      [/cancel|close|إلغاء|إغلاق/i, "fi-rr-cross-small"],
+      [/confirm|ok|yes|apply|تأكيد|نعم|موافق/i, "fi-rr-check"],
+      [/add|create|إضافة|إنشاء/i, "fi-rr-add"],
+      [/download|تنزيل/i, "fi-rr-download"],
+      [/upload|رفع/i, "fi-rr-upload"],
+      [/map|خريطة|الخريطة/i, "fi-rr-map-marker"],
+      [/settings|config|إعدادات/i, "fi-rr-settings"],
+      [/view|open|عرض|فتح/i, "fi-rr-eye"],
+      [/build|generate|بناء/i, "fi-rr-hammer"],
+      [/undo|revert|تراجع/i, "fi-rr-undo"]
+    ];
+    function iconClassFor(text) {
+      const value = String(text || "");
+      for (const [pattern, cls] of iconMap) if (pattern.test(value)) return cls;
+      return "fi-rr-circle";
+    }
 
+    document.querySelectorAll(".btn:not(.btn-close):not(.icon-only):not(.table .btn)").forEach(function (btn) {
+      if (btn.closest(".table") || btn.classList.contains("app-btn-ready")) return;
       const ar = btn.querySelector(":scope > .ar");
       const en = btn.querySelector(":scope > .en");
       const existingText = btn.textContent.trim();
-
-      // Preserve buttons that intentionally contain custom controls.
       if (!ar && !en && btn.querySelector("input, select, textarea")) return;
-
       const label = document.createElement("span");
       label.className = "app-btn-label";
-
-      if (ar || en) {
-        if (ar) label.appendChild(ar);
-        if (en) label.appendChild(en);
-      } else {
+      if (ar || en) { if (ar) label.appendChild(ar); if (en) label.appendChild(en); }
+      else {
         const text = document.createElement("span");
-        text.className = "en";
-        text.textContent = existingText;
-        label.appendChild(text);
+        text.className = "en"; text.textContent = existingText; label.appendChild(text);
       }
-
-      let rawIcon = btn.getAttribute("data-icon") || "";
-      if (!rawIcon) {
-        const source = [ar?.textContent || "", en?.textContent || "", btn.getAttribute("aria-label") || "", btn.getAttribute("title") || ""].join(" ");
-        const match = source.match(/[\\p{Extended_Pictographic}]/u);
-        rawIcon = match ? match[0] : "";
-      }
-
-      if (!rawIcon) {
-        const source = (en?.textContent || ar?.textContent || existingText).toLowerCase();
-        const iconMap = [
-          [/delete|remove|trash|حذف/, "🗑️"],
-          [/edit|rename|تعديل|تسمية/, "✏️"],
-          [/save|حفظ/, "💾"],
-          [/cancel|close|إلغاء|إغلاق/, "✕"],
-          [/confirm|ok|yes|apply|تأكيد|نعم|موافق/, "✓"],
-          [/add|create|إضافة|إنشاء/, "➕"],
-          [/download|تنزيل/, "⬇️"],
-          [/upload|رفع/, "⬆️"],
-          [/map|خريطة|الخريطة/, "🗺"],
-          [/settings|config|إعدادات/, "⚙️"]
-        ];
-        for (const [pattern, icon] of iconMap) {
-          if (pattern.test(source)) { rawIcon = icon; break; }
-        }
-      }
-      if (!rawIcon) rawIcon = "•";
-
-      // Remove trailing emoji from the bilingual label so the icon lives
-      // only in the dedicated right-hand block.
-      label.querySelectorAll(".ar, .en").forEach(function (node) {
+      const source = [ar?.textContent || "", en?.textContent || "", btn.getAttribute("aria-label") || "", btn.getAttribute("title") || "", btn.getAttribute("data-icon") || ""].join(" ");
+      const iconClass = btn.getAttribute("data-icon-class") || iconClassFor(source);
+      label.querySelectorAll(".ar, .en").forEach(node => {
         node.textContent = node.textContent.replace(/[\\p{Extended_Pictographic}]/gu, "").trim();
       });
-
       const icon = document.createElement("span");
-      icon.className = "app-btn-icon";
-      icon.setAttribute("aria-hidden", "true");
-      icon.textContent = rawIcon;
-
-      btn.textContent = "";
-      btn.appendChild(label);
-      btn.appendChild(icon);
-      btn.classList.add("app-btn-ready");
+      icon.className = "app-btn-icon"; icon.setAttribute("aria-hidden", "true");
+      icon.innerHTML = '<i class="fi ' + iconClass + '" aria-hidden="true"></i>';
+      btn.textContent = ""; btn.appendChild(label); btn.appendChild(icon); btn.classList.add("app-btn-ready");
     });
 
-    // Table actions are always compact icon-only circles.
     document.querySelectorAll(".table td .btn, .table th .btn, .table .row-actions .btn").forEach(function (btn) {
       if (btn.classList.contains("btn-close")) return;
-      const raw = (btn.getAttribute("aria-label") || btn.getAttribute("title") ||
-                   btn.getAttribute("data-confirm-en") || btn.textContent || "").trim();
-      const icons = [
-        ["delete|remove|trash|حذف", "🗑️"],
-        ["edit|rename|تعديل|تسمية", "✏️"],
-        ["save|حفظ", "💾"],
-        ["revert|undo|تراجع", "↩️"],
-        ["download|تنزيل", "⬇️"],
-        ["view|open|عرض|فتح", "👁️"],
-        ["add|create|إضافة", "➕"],
-        ["build|generate|إنشاء|بناء", "⚙️"]
-      ];
-      let icon = "";
-      for (const pair of icons) {
-        if (new RegExp(pair[0], "i").test(raw)) { icon = pair[1]; break; }
-      }
-      if (!icon) {
-        const match = raw.match(/^[^A-Za-z\u0600-\u06ff0-9\s]/u);
-        if (match) icon = match[0];
-      }
-      btn.dataset.icon = icon || "•";
+      const raw = (btn.getAttribute("aria-label") || btn.getAttribute("title") || btn.getAttribute("data-confirm-en") || btn.textContent || "").trim();
+      const iconClass = btn.getAttribute("data-icon-class") || iconClassFor(raw);
+      btn.innerHTML = '<i class="fi ' + iconClass + ' app-table-icon" aria-hidden="true"></i>';
       btn.setAttribute("aria-label", btn.getAttribute("aria-label") || raw);
       btn.setAttribute("title", btn.getAttribute("title") || raw);
+      btn.classList.add("icon-only");
     });
 
     // Close mobile drawer on link click
