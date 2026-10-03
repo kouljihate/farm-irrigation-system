@@ -57,6 +57,7 @@
 
       <button class="map-fit-btn" id="fit-btn" type="button" title="Fit map" aria-label="Fit map">⌖</button>
       <span id="map-summary" class="map-summary">— sectors</span>
+      <span id="sector-selection-summary" class="map-selection-summary">0 selected</span>
     </div>
 
     <div id="sectors-map" class="workspace-map"></div>
@@ -77,6 +78,9 @@
     <table class="sectors-table">
       <thead>
         <tr>
+          <th style="width:42px;">
+            <input type="checkbox" id="sector-select-all" title="Select all sectors">
+          </th>
           <th style="width:70px;">Code</th>
           <th>Coordinates (lon,lat per line)</th>
           <th style="width:130px;">Metrics</th>
@@ -86,6 +90,7 @@
       <tbody>
         {% for s in sectors %}
         <tr data-code="{{ s.code }}">
+          <td class="sector-select-cell"><input type="checkbox" class="js-sector-select" value="{{ s.code }}" aria-label="Select {{ s.code }}"></td>
           <td class="sector-code">{{ s.code }}</td>
 
           <td>
@@ -291,12 +296,65 @@
     return Array.from(selectedSectors);
   }
 
+  const actionButtons = {
+    add: document.getElementById("sector-add"),
+    rename: document.getElementById("sector-rename"),
+    remove: document.getElementById("sector-remove"),
+    swap: document.getElementById("sector-swap"),
+    split: document.getElementById("sector-split"),
+    merge: document.getElementById("sector-merge")
+  };
+
+  function updateActionButtons() {
+    const n = selectedSectors.size;
+    actionButtons.add.disabled = n !== 0;
+    actionButtons.rename.disabled = n !== 1;
+    actionButtons.remove.disabled = n < 1;
+    actionButtons.swap.disabled = n !== 2;
+    actionButtons.split.disabled = n !== 1;
+    actionButtons.merge.disabled = n < 2;
+    const summary = document.getElementById("sector-selection-summary");
+    summary.textContent = n + " selected";
+  }
+
+  function setSectorSelected(code, selected, additive = true) {
+    if (!additive) selectedSectors.clear();
+    if (selected) selectedSectors.add(code);
+    else selectedSectors.delete(code);
+    refreshSelectionUI();
+    updateActionButtons();
+  }
+
+  function wireMapSectorSelection() {
+    layers.sectors.eachLayer(layer => {
+      if (layer._sectorSelectionWired || !layer.feature) return;
+      layer._sectorSelectionWired = true;
+      const code = layer.feature.properties?.sector_code || layer.feature.properties?.name;
+      if (!code) return;
+      layer.on("click", e => {
+        L.DomEvent.stopPropagation(e);
+        const additive = !!(e.originalEvent?.ctrlKey || e.originalEvent?.metaKey || e.originalEvent?.shiftKey);
+        setSectorSelected(code, !selectedSectors.has(code), additive);
+      });
+      layer.on("dblclick", e => {
+        L.DomEvent.stopPropagation(e);
+        map.fitBounds(layer.getBounds(), {padding: [24, 24]});
+      });
+    });
+  }
+
   function refreshSelectionUI() {
     document.querySelectorAll("#sector-chips .zone-chip").forEach(chip => {
       const code = chip.getAttribute("data-sector");
       const selected = selectedSectors.has(code);
       chip.classList.toggle("selected", selected);
       chip.style.boxShadow = selected ? "0 0 0 3px rgba(13,110,253,.35)" : "none";
+    });
+    document.querySelectorAll(".js-sector-select").forEach(cb => {
+      cb.checked = selectedSectors.has(cb.value);
+      cb.closest("tr")?.classList.toggle("sector-row-selected", cb.checked);
+    });
+    updateActionButtons();
     });
   }
 
@@ -324,7 +382,7 @@
       .then(j => {
         selectedSectors.clear();
         if (successMessage) showStatus("ok", successMessage(j));
-        sharedMap.reload().then(() => setTimeout(paintChips, 100));
+        sharedMap.reload().then(() => { setTimeout(() => { wireMapSectorSelection(); paintChips(); refreshSelectionUI(); }, 100); });
       })
       .catch(err => showStatus("err", "⚠️ " + err.message));
   }
@@ -539,14 +597,8 @@
         if (rec) rec.poly.setStyle({ weight: 2 });
       });
       chip.addEventListener("click", (e) => {
-        if (e.ctrlKey || e.metaKey || e.shiftKey) {
-          if (selectedSectors.has(code)) selectedSectors.delete(code);
-          else selectedSectors.add(code);
-        } else {
-          selectedSectors.clear();
-          selectedSectors.add(code);
-        }
-        refreshSelectionUI();
+        const additive = !!(e.ctrlKey || e.metaKey || e.shiftKey);
+        setSectorSelected(code, !selectedSectors.has(code), additive);
         const rec = sectorIndex[code];
         if (rec) map.fitBounds(rec.bounds, { padding: [24, 24] });
       });
@@ -571,6 +623,17 @@
 
   // Leaflet needs a size refresh after the workspace layout is painted.
   window.addEventListener("resize", refreshMapSize);
+
+  // -------- table multi-selection --------
+  document.querySelectorAll(".js-sector-select").forEach(cb => {
+    cb.addEventListener("change", () => setSectorSelected(cb.value, cb.checked, true));
+  });
+  document.getElementById("sector-select-all")?.addEventListener("change", e => {
+    document.querySelectorAll(".js-sector-select").forEach(cb => { cb.checked = e.target.checked; });
+    selectedSectors.clear();
+    if (e.target.checked) document.querySelectorAll(".js-sector-select").forEach(cb => selectedSectors.add(cb.value));
+    refreshSelectionUI();
+  });
 
   // ================= coordinate editor (unchanged behaviour) =================
   function parseCoords(text) {
@@ -669,7 +732,7 @@
         row.querySelector(".js-area-m2").textContent = j.area_m2.toFixed(1);
         row.querySelector(".js-area-ha").textContent = j.area_ha.toFixed(4);
         setMsg(row, "✔ Saved", false);
-        sharedMap.reload().then(() => { window.setTimeout(paintChips, 100); });
+        sharedMap.reload().then(() => { window.setTimeout(() => { wireMapSectorSelection(); paintChips(); refreshSelectionUI(); }, 100); });
         window.setTimeout(paintChips, 0);
       } catch (e) {
         setMsg(row, "❌ " + e.message, true);
@@ -745,7 +808,11 @@
 
   // -------- initial load --------
   refreshMapSize();
-  window.setTimeout(paintChips, 0);
+  window.setTimeout(() => {
+    wireMapSectorSelection();
+    paintChips();
+    refreshSelectionUI();
+  }, 250);
 })();
 </script>
 {% endblock %}
