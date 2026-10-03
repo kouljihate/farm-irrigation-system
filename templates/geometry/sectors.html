@@ -207,7 +207,10 @@
   const M_PER_DEG_LAT = Math.PI * R / 180.0;
 
   // ================= map (mirrors geometry/zones.html) =================
-  const map = L.map("sectors-map").setView([33.8455, -4.5860], 15);
+  const mapContainer = document.getElementById("sectors-map");
+  if (!mapContainer) throw new Error("Map container not found: sectors-map");
+  mapContainer.style.minHeight = "650px";
+  const map = L.map(mapContainer, {zoomControl: true, attributionControl: true}).setView([33.8455, -4.5860], 15);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 20, attribution: "© OpenStreetMap"
@@ -477,6 +480,15 @@
 
   map.on("pm:editend", e => saveGeomanLayer(e.layer).catch(err => showStatus("err", "⚠️ " + err.message)));
   map.on("pm:dragend", e => saveGeomanLayer(e.layer).catch(err => showStatus("err", "⚠️ " + err.message)));
+
+  function refreshMapSize() {
+    window.requestAnimationFrame(() => {
+      map.invalidateSize(true);
+      window.setTimeout(() => map.invalidateSize(true), 200);
+    });
+  }
+  window.addEventListener("load", refreshMapSize);
+  window.addEventListener("resize", refreshMapSize);
 
   // -------- load everything --------
   function loadAll() {
