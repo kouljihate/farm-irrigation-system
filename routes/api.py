@@ -1,7 +1,8 @@
 """JSON API for the Leaflet map."""
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, session
+from bson import ObjectId
+from flask import Blueprint, jsonify, request, session
 from db import queries
 from db.connection import get_db
 
@@ -38,6 +39,7 @@ def geojson():
                 "type": "Feature",
                 "properties": {
                     "name": d.get("name"),
+                    "id": str(d.get("_id")),
                     "collection": coll,
                     "diameter_mm": d.get("diameter_mm"),
                     "species": d.get("species"),
@@ -112,3 +114,31 @@ def zones():
             "geometry": geom,
         })
     return jsonify({"type": "FeatureCollection", "features": features})
+
+@bp.route("/geometry/<collection>/<object_id>", methods=["PUT"])
+def update_geometry(collection: str, object_id: str):
+    """Persist a Geoman-edited geometry for the current project."""
+    pid = session.get("project_id", "")
+    allowed = {"property", "basins", "water_points", "sectors", "zones", "pipes",
+               "rows", "valves", "trees", "driplines", "manifolds"}
+    if not pid:
+        return jsonify({"ok": False, "error": "no project"}), 400
+    if collection not in allowed:
+        return jsonify({"ok": False, "error": "unsupported geometry collection"}), 400
+    payload = request.get_json(silent=True) or {}
+    geometry = payload.get("geometry")
+    if not isinstance(geometry, dict) or not geometry.get("type"):
+        return jsonify({"ok": False, "error": "valid GeoJSON geometry is required"}), 400
+    try:
+        oid = ObjectId(object_id)
+    except Exception:
+        return jsonify({"ok": False, "error": "invalid geometry id"}), 400
+    db = get_db()
+    field = "location" if collection in {"water_points", "valves", "trees"} else "geom"
+    result = db[collection].update_one(
+        {"_id": oid, "project_id": pid},
+        {"$set": {field: geometry}},
+    )
+    if result.matched_count != 1:
+        return jsonify({"ok": False, "error": "geometry record not found"}), 404
+    return jsonify({"ok": True, "collection": collection, "id": object_id})
