@@ -148,6 +148,15 @@ class Config:
     # Engineering assumptions for the design checks (core/hydraulics.py)
     HYDRAULICS = _yaml.get("hydraulics", {})
 
+    # MapHub server-side integration
+    MAPHUB_API_KEY = os.environ.get("MAPHUB_API_KEY", "")
+    MAPHUB_BASE_URL = os.environ.get("MAPHUB_BASE_URL", "https://maphub.net")
+    MAPHUB_EMBED_BASE_URL = os.environ.get(
+        "MAPHUB_EMBED_BASE_URL", "https://maphub.net/embed"
+    )
+    MAPHUB_VISIBILITY = os.environ.get("MAPHUB_VISIBILITY", "unlisted")
+    MAPHUB_TIMEOUT_SECONDS = int(os.environ.get("MAPHUB_TIMEOUT_SECONDS", "20"))
+
     # Logging
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
