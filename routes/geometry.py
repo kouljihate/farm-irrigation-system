@@ -20,7 +20,8 @@ from core.geometry import (
 )
 from core.validation import (
     SectorAdd, SectorCodes, SectorRename, SectorSave, SectorSplit, SectorSwap,
-    ZoneBuild, validate_form,
+    ZoneAdd, ZoneBuild, ZoneCodes, ZoneRename, ZoneSplit, ZoneSwap,
+    validate_form,
 )
 from db import queries, repository
 from db.connection import get_db
