@@ -806,6 +806,11 @@
   });
 
   // -------- initial load --------
+  window.addEventListener("farm-map-loaded", () => {
+    wireMapSectorSelection();
+    paintChips();
+    refreshSelectionUI();
+  });
   refreshMapSize();
   window.setTimeout(() => {
     wireMapSectorSelection();
