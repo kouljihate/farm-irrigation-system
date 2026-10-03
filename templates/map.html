@@ -2,58 +2,42 @@
 {% block title %}Map · {{ app_title }}{% endblock %}
 {% block content %}
 <h1 class="h3 workspace-title bi">
-  <span class="en">Map</span><span class="ar">الخريطة</span>
-  — <code>{{ project_id }}</code>
+  <span class="en">Map</span><span class="ar">الخريطة</span> — <code>{{ project_id }}</code>
 </h1>
 
 <div class="workspace">
   <div class="workspace-main">
     <div class="workspace-toolbar">
       <span class="title bi">
-        <span class="en">MapHub project map</span><span class="ar">خريطة المشروع MapHub</span>
+        <span class="en">Farm map</span><span class="ar">خريطة المزرعة</span>
       </span>
-      {% if maphub_url %}
-      <a class="btn btn-outline-secondary btn-sm ms-auto"
-         href="{{ maphub_url|replace('/embed/', '/') }}"
-         target="_blank" rel="noopener">
-        <span class="en">Open MapHub</span><span class="ar">فتح MapHub</span>
-      </a>
-      {% endif %}
+      <span class="small text-muted ms-auto bi">
+        <span class="en">Leaflet + Geoman</span><span class="ar">Leaflet + Geoman</span>
+      </span>
     </div>
-
-    {% if maphub_url %}
-      <div class="maphub-frame-wrap">
-        <iframe
-          class="maphub-iframe"
-          id="maphub-map"
-          title="Farm Irrigation MapHub map"
-          src="{{ maphub_url }}"
-          frameborder="0"
-          allowfullscreen>
-        </iframe>
-      </div>
-    {% elif maphub_error %}
-      <div class="alert alert-warning m-3">
-        <strong>MapHub:</strong> {{ maphub_error }}
-      </div>
-    {% else %}
-      <div class="empty-state m-3">
-        <span class="en">Select a project first.</span>
-        <span class="ar">اختر مشروعاً أولاً.</span>
-      </div>
-    {% endif %}
+    <div id="map" class="workspace-map"></div>
   </div>
-
   <aside class="workspace-side">
     <div class="side-title bi">
-      <span class="en">Map provider</span><span class="ar">مزود الخريطة</span>
+      <span class="en">Map editing</span><span class="ar">تحرير الخريطة</span>
     </div>
-    <div class="side-body">
-      <p class="small text-muted mb-0">
-        <span class="en">MapHub is the map rendering/publishing service. MongoDB remains the source of truth for farm geometry.</span>
-        <span class="ar">MapHub هو مزود عرض ونشر الخريطة، بينما تبقى بيانات MongoDB هي المصدر الأساسي لهندسة المزرعة.</span>
+    <div class="side-body small bi">
+      <p class="mb-2">
+        <span class="en">Use the Geoman toolbar to edit existing farm geometry. Changes are saved to MongoDB.</span>
+        <span class="ar">استخدم أدوات Geoman لتحرير هندسة المزرعة. يتم حفظ التغييرات في MongoDB.</span>
       </p>
+      <div id="map-edit-status" class="zones-status"></div>
     </div>
   </aside>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+window.FARM_API = {
+  geojson: "{{ url_for('api.geojson') }}",
+  bounds: "{{ url_for('api.bounds') }}",
+  geometryBase: "{{ url_for('api.update_geometry', collection='COLLECTION', object_id='OBJECT_ID') }}"
+};
+</script>
+<script src="{{ url_for('static', filename='js/map.js', v='12') }}"></script>
 {% endblock %}
