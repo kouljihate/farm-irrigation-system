@@ -30,8 +30,7 @@
 
     const container = document.getElementById("toast-container");
     if (!container) {
-      console.warn("Toast container not found — falling back to alert");
-      alert(message);
+      console.warn("Toast container not found:", message);
       return;
     }
 
