@@ -338,7 +338,24 @@
     if (selected) selectedSectors.add(code);
     else selectedSectors.delete(code);
     refreshSelectionUI();
+    updateSectorMapHighlight();
     updateActionButtons();
+  }
+
+  function updateSectorMapHighlight() {
+    layers.sectors.eachLayer(layer => {
+      const props = layer.feature?.properties || {};
+      const code = props.sector_code || props.name;
+      if (!code || typeof layer.setStyle !== "function") return;
+      const selected = selectedSectors.has(code);
+      const base = sectorColor(code);
+      layer.setStyle({
+        color: selected ? "#0d6efd" : base,
+        fillColor: selected ? "#0d6efd" : base,
+        weight: selected ? 4 : 2,
+        fillOpacity: selected ? 0.45 : 0.15
+      });
+    });
   }
 
   function wireMapSectorSelection() {
@@ -370,6 +387,7 @@
       master.checked = all > 0 && selected === all;
       master.indeterminate = selected > 0 && selected < all;
     });
+    updateSectorMapHighlight();
     updateActionButtons();
   }
 
