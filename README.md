@@ -8,10 +8,9 @@ Flask + MongoDB web application for farm irrigation system design, geometry edit
 
 Version 2.3.0 reflects the current application architecture and design defaults:
 
-- 5-hectare farm model
-- 1-hectare sector target
-- 2 irrigation zones per sector
-- 90 / 63 / 32 mm pipe defaults
+- Configurable farm and irrigation geometry
+- Configurable sector and zone design
+- Configurable pipe diameter defaults
 - Leaflet + Leaflet-Geoman map editing
 - KML and KMZ import support
 - MongoDB as the authoritative geometry store
@@ -43,18 +42,7 @@ Leaflet and Leaflet-Geoman are used throughout the web application for interacti
 
 ## Farm Design Model
 
-The current design target is:
-
-| Parameter | Default |
-|---|---:|
-| Total farm area | 5 ha |
-| Sector target | 1 ha |
-| Number of sectors | 5 |
-| Zones per sector | 2 |
-| MainLine | 90 mm |
-| SubLine | 63 mm |
-| DripLine | 32 mm |
-| Nominal emitter discharge | 2.0 L/h |
+Farm dimensions, sector sizing, zone configuration, pipe diameters, and hydraulic design parameters are configurable through the application configuration.
 
 The farm water infrastructure supports a well and basin/water source. Elevation data can be supplied through the imported KML/KMZ geometry.
 
@@ -136,8 +124,8 @@ The application follows the irrigation design workflow:
    - Configure land, water source, basin, and elevation information.
 
 2. **Geometry**
-   - **Sectors** — create and edit approximately 1 ha sectors.
-   - **Zones** — split sectors into two irrigation zones by default.
+   - **Sectors** — create and edit configurable farm sectors.
+   - **Zones** — split sectors into configurable irrigation zones.
    - Interactive geometry editing is performed with Leaflet-Geoman.
 
 3. **Hydrology**
@@ -223,14 +211,7 @@ The geometry API persists edited GeoJSON geometry to the corresponding MongoDB c
 
 The main design configuration is stored in `config.yaml`.
 
-Important defaults include:
-
-- Sector target area: **1.0 ha**
-- Zones per sector: **2**
-- MainLine diameter: **90 mm**
-- SubLine diameter: **63 mm**
-- DripLine diameter: **32 mm**
-- Nominal emitter discharge: **2.0 L/h**
+Farm dimensions, sector/zone rules, pipe diameters, hydraulic parameters, and other design defaults are configurable rather than fixed in the documentation.
 
 Environment variables in `.env` override deployment-specific settings and secrets.
 
