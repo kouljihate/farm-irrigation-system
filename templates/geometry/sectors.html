@@ -58,7 +58,19 @@
       <span id="sector-selection-summary" class="map-selection-summary">0 selected</span>
     </div>
 
-    <div id="sectors-map" class="workspace-map"></div>
+    <div id="sectors-map" class="workspace-map">
+      <div class="sector-draw-toolbar" aria-label="Map drawing tools">
+        <button type="button" class="sector-draw-btn" data-draw="Polygon" title="Polygon" aria-label="Polygon">
+          <i class="fi fi-rr-shape" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="sector-draw-btn" data-draw="Line" title="Line" aria-label="Line">
+          <i class="fi fi-rr-minus" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="sector-draw-btn" data-draw="Marker" title="Mark" aria-label="Mark">
+          <i class="fi fi-rr-marker" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
 
     <div class="workspace-toolbar">
       <span class="title bi">
@@ -206,7 +218,7 @@
 
 {% block scripts %}
 <script>window.FARM_API = {geojson:"{{ url_for('api.geojson') }}", bounds:"{{ url_for('api.bounds') }}", geometryBase:"{{ url_for('api.update_geometry', collection='COLLECTION', object_id='OBJECT_ID') }}"};</script>
-<script>window.FARM_MAP_CONFIG = {containerId:"sectors-map", statusId:"map-status"};</script>
+<script>window.FARM_MAP_CONFIG = {containerId:"sectors-map", statusId:"map-status", autoLoad:false};</script>
 <script src="{{ url_for('static', filename='js/map.js', v='13') }}"></script>
 <script>
 (function () {
@@ -544,18 +556,36 @@
       .then(d => { if (d.bounds) map.fitBounds(d.bounds, { padding: [20, 20] }); });
   }
 
-  // Geoman is optional at startup: the map must still render if the CDN is unavailable.
-  if (map.pm) {
-    map.pm.setGlobalOptions({snappable: true, snapDistance: 20});
-    map.pm.addControls({
-      position: "topleft",
-      drawMarker: true, drawCircleMarker: false, drawPolyline: true,
-      drawRectangle: false, drawPolygon: true, drawCircle: false, drawText: false,
-      editMode: true, dragMode: true, cutPolygon: false, removalMode: false, rotateMode: false
+  // Leaflet-Geoman remains the editing engine. Drawing is exposed through
+  // the compact three-button toolbar rendered inside the map.
+  document.querySelectorAll(".sector-draw-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (!map.pm) {
+        showStatus("err", "⚠️ Leaflet-Geoman is not available.");
+        return;
+      }
+      document.querySelectorAll(".sector-draw-btn").forEach(b => b.classList.remove("active"));
+      const mode = btn.dataset.draw;
+      map.pm.enableDraw(mode);
+      btn.classList.add("active");
     });
-  } else {
-    console.warn("Leaflet-Geoman is not available; map editing controls are disabled.");
-  }
+  });
+
+  map.on("pm:create", e => {
+    document.querySelectorAll(".sector-draw-btn").forEach(b => b.classList.remove("active"));
+    if (e.layer) {
+      e.layer.pmIgnore = false;
+      e.layer.feature = e.layer.feature || {
+        type: "Feature",
+        properties: {collection: "sectors", name: "New geometry"},
+        geometry: e.layer.toGeoJSON().geometry
+      };
+    }
+  });
+
+  map.on("pm:drawend", () => {
+    document.querySelectorAll(".sector-draw-btn").forEach(b => b.classList.remove("active"));
+  });
 
   async function saveGeomanLayer(layer) {
     const p = layer.feature && layer.feature.properties;
@@ -827,17 +857,15 @@
   });
 
   // -------- initial load --------
-  window.addEventListener("farm-map-loaded", () => {
-    wireMapSectorSelection();
-    paintChips();
-    refreshSelectionUI();
-  });
+  // Use the sector page renderer so sector styling, indexing and selection
+  // are established consistently before the user interacts with the map.
   refreshMapSize();
+  loadAll();
   window.setTimeout(() => {
     wireMapSectorSelection();
     paintChips();
     refreshSelectionUI();
-  }, 250);
+  }, 300);
 })();
 </script>
 {% endblock %}
