@@ -1899,3 +1899,63 @@ input[type="reset"]:hover::after {
 .sectors-current-table tr.sector-row-selected td {
   background: #eef7f2 !important;
 }
+
+
+/* Geometry / Sectors compact map header */
+#sectors-map ~ * {}
+#sectors-map .leaflet-pm-toolbar {
+  transform: scale(0.78);
+  transform-origin: top left;
+}
+#sectors-map + .workspace-toolbar {}
+
+body:has(#sectors-map) .map-header {
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+}
+body:has(#sectors-map) .map-header-actions {
+  gap: 0.25rem;
+}
+body:has(#sectors-map) .map-action-btn {
+  min-width: 88px;
+  min-height: 38px;
+  grid-template-columns: minmax(54px, 1fr) 30px;
+  border-radius: 7px !important;
+}
+body:has(#sectors-map) .map-action-btn .map-action-label {
+  padding: 0.12rem 0.25rem;
+}
+body:has(#sectors-map) .map-action-btn .map-action-label .ar {
+  font-size: 0.68rem;
+}
+body:has(#sectors-map) .map-action-btn .map-action-label .en {
+  font-size: 0.48rem;
+}
+body:has(#sectors-map) .map-action-btn .map-action-icon {
+  font-size: 0.85rem;
+}
+body:has(#sectors-map) .map-header-layers {
+  min-width: 220px;
+  gap: 0.2rem;
+  grid-template-columns: repeat(4, minmax(48px, 1fr));
+}
+body:has(#sectors-map) .map-check {
+  min-height: 38px;
+  padding: 0.12rem 0.2rem;
+  border-radius: 7px;
+}
+body:has(#sectors-map) .map-check-label .ar {
+  font-size: 0.64rem;
+}
+body:has(#sectors-map) .map-check-label .en {
+  font-size: 0.46rem;
+}
+body:has(#sectors-map) .map-check input {
+  width: 10px;
+  height: 10px;
+}
+body:has(#sectors-map) .map-selection-summary {
+  font-size: 0.58rem;
+  white-space: nowrap;
+  align-self: center;
+}
