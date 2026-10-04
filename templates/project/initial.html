@@ -9,8 +9,14 @@
     <span class="en">Import KML</span><span class="ar">استيراد KML</span>
   </span>
       <input type="file" name="kml" accept=".kml" class="form-control form-control-sm" style="width:auto;" required>
-      <button type="submit" name="action" value="preview" class="btn btn-outline-secondary btn-sm">Preview only</button>
-      <button type="submit" name="action" value="import" class="btn btn-success btn-sm">Import to database</button>
+      <button type="submit" name="action" value="preview" class="btn btn-outline-secondary btn-sm btn-stack">
+        <span class="ar"><i class="fi fi-rr-eye"></i> معاينة فقط</span>
+        <span class="en"><i class="fi fi-rr-eye"></i> Preview only</span>
+      </button>
+      <button type="submit" name="action" value="import" class="btn btn-success btn-sm btn-stack">
+        <span class="ar"><i class="fi fi-rr-upload"></i> استيراد إلى قاعدة البيانات</span>
+        <span class="en"><i class="fi fi-rr-upload"></i> Import to database</span>
+      </button>
     </form>
 
     <div class="workspace-body flush">
