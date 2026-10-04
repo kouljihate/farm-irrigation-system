@@ -2,7 +2,7 @@
 
 app:
   title: "Farm Irrigation Workbench"
-  version: "2.2.0"
+  version: "2.3.0"
 
 mongodb:
   host: "localhost"
@@ -16,7 +16,7 @@ paths:
 # Domain defaults for the irrigation design workflow.
 geometry:
   sector_target_area_ha: 1.0
-  zones_per_sector: 3
+  zones_per_sector: 2
   smart_geometry: true
 
 # Default build parameters pre-filled on each step page.
