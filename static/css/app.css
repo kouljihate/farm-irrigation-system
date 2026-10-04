@@ -1901,6 +1901,49 @@ input[type="reset"]:hover::after {
 }
 
 
+/* Compact drawing toolbar for Geometry / Sectors map */
+body:has(#sectors-map) .sector-draw-toolbar {
+  position: absolute;
+  z-index: 500;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+body:has(#sectors-map) .sector-draw-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #cfd5dc;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.95);
+  color: #495057;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.16);
+  cursor: pointer;
+}
+body:has(#sectors-map) .sector-draw-btn:hover,
+body:has(#sectors-map) .sector-draw-btn.active {
+  background: #e9f2ff;
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+body:has(#sectors-map) .sector-draw-btn i {
+  font-size: 0.85rem;
+}
+body:has(#sectors-map) .sectors-current-table tr.sector-row-selected td {
+  background: #e9f2ff !important;
+}
+body:has(#sectors-map) .sectors-current-table tbody tr {
+  cursor: pointer;
+}
+body:has(#sectors-map) .sectors-current-table tbody tr:hover td {
+  background: #f4f7fa;
+}
+
 /* Geometry / Sectors compact map header */
 #sectors-map ~ * {}
 #sectors-map .leaflet-pm-toolbar {
