@@ -34,23 +34,6 @@
         </a>
       </div>
 
-      <!-- CENTER: Project Selector -->
-      <div class="d-flex align-items-center gap-2">
-        <form method="post" action="{{ url_for('project.set_project') }}" class="d-flex align-items-center gap-2 mb-0">
-          <label class="form-label mb-0 small bi" for="header-project-select">
-            <span class="en">Project:</span><span class="ar">المشروع:</span>
-          </label>
-          <select class="form-select form-select-sm" id="header-project-select" name="project_id" style="width: auto; min-width: 180px;" onchange="this.form.submit()">
-            <option value="">-- Select Project --</option>
-            {% for p in projects %}
-            <option value="{{ p.project_id }}" {% if p.project_id == project_id %}selected{% endif %}>
-              {{ p.name or p.project_id }}
-            </option>
-            {% endfor %}
-          </select>
-        </form>
-      </div>
-
       <!-- RIGHT: Map, Logs, Arabic title -->
       <div class="d-flex align-items-center gap-2">
         <a class="btn btn-sm btn-outline-light btn-stack"
