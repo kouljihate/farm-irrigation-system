@@ -1,45 +1,109 @@
 # Farm Irrigation Workbench
 
-Flask + MongoDB web application for orchard/farm irrigation system design.
+Flask + MongoDB web application for farm irrigation system design, geometry editing, hydraulic planning, field layout, and reporting.
 
 ## Version
 
-**2.2.0** — Implemented the clean Project → Geometry → Hydrology → Field → Report workflow, moved Valves into Hydrology, and standardized 1 ha sector targets, 3 zones per sector, and 90/63/32 mm pipe defaults.
+**2.3.0**
 
-## UI / Domain Refactoring
+Version 2.3.0 reflects the current application architecture and design defaults:
 
-The primary navigation now follows the design workflow: **Project → Geometry → Hydrology → Field → Report**. Geometry is limited to **Sectors** and **Zones**; **Valves** are managed under Hydrology. The legacy `/geometry/valves` URL redirects to Hydrology for compatibility. The existing export endpoints remain available as report/download endpoints while the user-facing module is named Report.
+- 5-hectare farm model
+- 1-hectare sector target
+- 2 irrigation zones per sector
+- 90 / 63 / 32 mm pipe defaults
+- Leaflet + Leaflet-Geoman map editing
+- KML and KMZ import support
+- MongoDB as the authoritative geometry store
+- Shared GeoJSON map rendering across the application
+- Bilingual English / Arabic UI
+- Flaticon UIcons for application actions
+
+## Application Architecture
+
+The application uses MongoDB as the source of truth for farm geometry and exposes that geometry through Flask APIs as GeoJSON.
+
+```text
+MongoDB
+   ↓
+Flask / API
+   ↓
+GeoJSON
+   ↓
+Leaflet
+   ↓
+Leaflet-Geoman
+   ↓
+Flask geometry API
+   ↓
+MongoDB
+```
+
+Leaflet and Leaflet-Geoman are used throughout the web application for interactive map display and geometry editing. The Project Map, Sectors, Zones, and related geometry workflows use the shared map engine where applicable.
+
+## Farm Design Model
+
+The current design target is:
+
+| Parameter | Default |
+|---|---:|
+| Total farm area | 5 ha |
+| Sector target | 1 ha |
+| Number of sectors | 5 |
+| Zones per sector | 2 |
+| MainLine | 90 mm |
+| SubLine | 63 mm |
+| DripLine | 32 mm |
+| Nominal emitter discharge | 2.0 L/h |
+
+The farm water infrastructure supports a well and basin/water source. Elevation data can be supplied through the imported KML/KMZ geometry.
 
 ## Stack
 
-- **Backend**: Flask 3.x, PyMongo 4.x
-- **Geometry**: Shapely 2.x, NumPy
-- **Report**: lxml (KML), ezdxf (DXF), GeoJSON, CSV
-- **Frontend**: Bootstrap 5 (Bootswatch Journal), MapHub embeds, bilingual EN/AR
-- **Database**: MongoDB (local or Atlas)
-- **Validation**: Pydantic 2.x
-- **Async**: ThreadPoolExecutor for long-running geometry operations
-- **Auth**: Flask-Login with role-based access
-- **Testing**: pytest
+- **Backend:** Flask 3.x, PyMongo 4.x
+- **Database:** MongoDB (local or Atlas)
+- **Geometry:** Shapely 2.x, NumPy
+- **Frontend:** Bootstrap 5, Leaflet
+- **Map editing:** Leaflet-Geoman
+- **Import:** KML / KMZ
+- **Export:** KML, DXF, GeoJSON, CSV
+- **Validation:** Pydantic 2.x
+- **Authentication:** Flask-Login with role-based access
+- **Testing:** pytest
 
 ## Install
 
+### Windows
+
 ```bash
 python -m venv venv
-venv\Scripts\activate          # Windows
-source venv/bin/activate       # macOS / Linux
+venv\\Scripts\\activate
+pip install -r requirements.txt
+```
 
+### macOS / Linux
+
+```bash
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ## MongoDB
 
-Install MongoDB Community Edition locally and start it as a service.
-Default connection: `mongodb://localhost:27017`.
+Install MongoDB Community Edition locally or use MongoDB Atlas.
 
-Copy `.env.example` to `.env` and adjust if needed:
+Default local connection:
 
+```text
+mongodb://localhost:27017
 ```
+
+Copy `.env.example` to `.env` and configure the environment for your installation.
+
+Example:
+
+```text
 MONGO_HOST=localhost
 MONGO_PORT=27017
 MONGO_DB=farm_irrigation
@@ -48,7 +112,7 @@ FLASK_DEBUG=1
 LOG_LEVEL=INFO
 ```
 
-**Indexes**: Auto-created on startup for all `project_id` fields + compound unique indexes.
+Do not commit `.env` or secret keys.
 
 ## Run
 
@@ -56,125 +120,142 @@ LOG_LEVEL=INFO
 python run.py
 ```
 
-Open http://127.0.0.1:5000
+Then open:
+
+```text
+http://127.0.0.1:5000
+```
 
 ## Domain Workflow
 
-The application is organized around the following domain modules:
+The application follows the irrigation design workflow:
 
-1. **Project** — create/load a project and import/link the land KML, water points and elevation data.
+1. **Project**
+   - Create/open the farm project.
+   - Import the source KML or KMZ.
+   - Configure land, water source, basin, and elevation information.
+
 2. **Geometry**
-   - **Sectors** — land sectors, targeting approximately 1 hectare per sector.
-   - **Zones** — three irrigation zones per sector by default.
+   - **Sectors** — create and edit approximately 1 ha sectors.
+   - **Zones** — split sectors into two irrigation zones by default.
+   - Interactive geometry editing is performed with Leaflet-Geoman.
+
 3. **Hydrology**
-   - **MainLine** — main water distribution routing.
-   - **SubLines** — distribution from mainline/valves to zones.
-   - **Valves** — main and zone valve management.
+   - MainLine
+   - SubLines
+   - Valves
+   - Hydraulic design checks
+
 4. **Field**
-   - **Rows** — crop row layout.
-   - **Trees** — tree placement.
-   - **DripLine** — dripline layout.
-5. **Report** — BOM and generated KML, DXF, GeoJSON and CSV outputs.
+   - Rows
+   - Trees
+   - DripLine
 
-### Geometry actions
+5. **Report**
+   - BOM
+   - KML
+   - DXF
+   - GeoJSON
+   - CSV
 
-Sectors and Zones provide a consistent toolbar for:
+## Geometry Editing
 
-`Add` · `Rename` · `Remove` · `Swap` · `Split` · `Merge` · `Smart Create/Split`
+The map workflow supports interactive geometry operations including:
 
-Smart geometry considers the land boundary, water-point proximity and optional elevation data when available. Polygon construction remains deterministic and validation-driven; the strategy layer does not directly draw arbitrary polygons.
+- Polygon
+- Line
+- Marker
+- Edit
+- Move
+- Delete/remove where enabled
+- Sector selection
+- Multi-selection
+- Sector split/merge workflows
+- Shared map data loading
+- GeoJSON persistence through the Flask API
 
-### Design defaults
+The Sectors and Zones pages synchronize map selection with their corresponding tables.
 
-- Sector target area: **1.0 ha**
-- Zones per sector: **3**
-- MainLine diameter: **90 mm**
-- SubLine diameter: **63 mm**
-- DripLine diameter: **32 mm**
-- Nominal emitter discharge: **2.0 L/h**
+## KML / KMZ Import
+
+The Project → Initialize workflow accepts:
+
+- `.kml`
+- `.kmz`
+
+KMZ files are ZIP archives containing KML data. The importer supports the standard `doc.kml` convention and falls back to another KML entry when necessary.
+
+The imported geometry is converted into the application's GeoJSON/domain representation and stored in MongoDB.
 
 ## Project Structure
 
 | Folder/File | Purpose |
 |---|---|
-| `app.py` | Flask app factory and blueprint registration |
+| `app.py` | Flask application factory and blueprint registration |
 | `run.py` | Development server entry point |
-| `config.py` / `config.yaml` | Configuration and validated domain defaults |
-| `routes/` | Project, Geometry, Hydrology, Field, Report and supporting blueprints |
-| `core/` | Domain logic: KML, geometry, piping, rows, trees, driplines, valves, BOM and validation |
-| `db/` | MongoDB connection, repository, queries and models |
-| `templates/` | Jinja2 templates grouped by domain module |
-| `static/` | CSS and JavaScript |
-| `imports/` | User-uploaded KML files |
-| `exports/` | Generated report/export files |
-| `tests/` | Unit and integration tests |
+| `config.py` / `config.yaml` | Application and irrigation design configuration |
+| `routes/` | Project, Geometry, Hydrology, Field, Report and API routes |
+| `core/` | Domain logic for KML, geometry, piping, rows, trees, driplines, valves, BOM and validation |
+| `db/` | MongoDB connection, repositories, queries and models |
+| `templates/` | Jinja2 templates grouped by application module |
+| `static/` | CSS and JavaScript, including the shared Leaflet map engine |
+| `imports/` | Imported source files |
+| `exports/` | Generated export/report files |
+| `tests/` | Automated tests |
 
-## Workflow
+## API
 
-1. **Project** — create/open the project and import the source KML.
-2. **Geometry → Sectors** — create or verify sectors; target approximately 1 ha each.
-3. **Geometry → Zones** — split each sector into 3 zones by default.
-4. **Hydrology → MainLine** — define mainline routing from water/basin infrastructure.
-5. **Hydrology → SubLines** — route distribution lines to zones.
-6. **Hydrology → Valves** — manage Main Valves (MV) and Zone Valves (ZV).
-7. **Field → Rows** — generate/trace rows inside zones.
-8. **Field → Trees** — place trees along rows.
-9. **Field → DripLine** — generate dripline per row.
-10. **Report** — generate BOM and download KML, DXF, GeoJSON and CSV outputs.
-11. **Map** — inspect the complete design on the MapHub project map.
-
-## Features
-
-- Authentication with Flask-Login and role-based access
-- Revision history for build steps
-- Bilingual English/Arabic UI with RTL support
-- MapHub project map with server-side GeoJSON synchronization
-- Multiple deterministic zone split algorithms
-- Pipe routing with direct and boundary-detour modes
-- KML, DXF, GeoJSON and CSV reporting
-- Pydantic input validation
-- Async processing for long geometry operations
-- MongoDB indexes
-- Automated core algorithm tests
-
-## API Endpoints
-
-```
-GET  /api/v1/summary      — Project summary counts
-GET  /api/v1/geojson      — Full project as GeoJSON FeatureCollection
-GET  /api/v1/bounds       — Property bounding box for map fit
-GET  /api/v1/zones        — Zones only
-GET  /geometry/tasks/<id> — Async task status
-GET  /geometry/tasks      — All tasks for current project
-```
-
-## MapHub configuration
-
-The full project map is rendered by MapHub. The farm database remains the source of truth; when the Map page is opened, the current project GeoJSON is synchronized to its MapHub map and the map is embedded in the Flask UI.
-
-MapHub API authentication is server-side using the `MAPHUB_API_KEY` environment variable. The key is never rendered into HTML or JavaScript. MapHub's API uses the `Authorization: Token <api_key>` header and supports creating/updating maps with GeoJSON. urlMapHub API documentationhttps://docs.maphub.net/api/
-
-Add these values to your local `.env`:
+The application exposes project and geometry APIs including:
 
 ```text
-MAPHUB_API_KEY=your-map-hub-api-key
-MAPHUB_BASE_URL=https://maphub.net
-MAPHUB_EMBED_BASE_URL=https://maphub.net/embed
-MAPHUB_VISIBILITY=unlisted
-MAPHUB_TIMEOUT_SECONDS=20
+GET  /api/v1/summary
+GET  /api/v1/geojson
+GET  /api/v1/bounds
+GET  /api/v1/zones
+GET  /geometry/tasks/<id>
+GET  /geometry/tasks
+PUT  /api/geometry/<collection>/<object_id>
 ```
 
-Do not commit the API key. Because an API key was shared during development, rotate/revoke that key in MapHub and use a newly generated key in the local environment.
+The geometry API persists edited GeoJSON geometry to the corresponding MongoDB collection.
 
 ## Configuration
 
-Edit `config.yaml` for application version, MongoDB settings, import/export directories, geometry defaults, pipe diameters and hydraulic assumptions.
+The main design configuration is stored in `config.yaml`.
 
-Environment variables in `.env` override YAML values for secrets and deployment-specific settings.
+Important defaults include:
+
+- Sector target area: **1.0 ha**
+- Zones per sector: **2**
+- MainLine diameter: **90 mm**
+- SubLine diameter: **63 mm**
+- DripLine diameter: **32 mm**
+- Nominal emitter discharge: **2.0 L/h**
+
+Environment variables in `.env` override deployment-specific settings and secrets.
 
 ## Testing
+
+Run the core test suite with:
 
 ```bash
 python -m pytest tests/test_core.py -v
 ```
 
+For the full test suite:
+
+```bash
+python -m pytest -v
+```
+
+## Security
+
+- Keep `.env` out of source control.
+- Never commit MongoDB passwords, Flask secret keys, or API credentials.
+- Rotate any credential that has previously been exposed.
+- Use HTTPS and secure cookie settings in production.
+- Review authorization and CSRF protections before production deployment.
+
+## License
+
+No open-source license is currently declared for this repository.
