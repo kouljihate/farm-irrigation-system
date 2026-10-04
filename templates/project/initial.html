@@ -6,9 +6,9 @@
   <div class="workspace-main">
     <form method="post" enctype="multipart/form-data" class="workspace-toolbar">
       <span class="title bi">
-    <span class="en">Import KML</span><span class="ar">استيراد KML</span>
+    <span class="en">Import KML / KMZ</span><span class="ar">استيراد KML / KMZ</span>
   </span>
-      <input type="file" name="kml" accept=".kml" class="form-control form-control-sm" style="width:auto;" required>
+      <input type="file" name="kml" accept=".kml,.kmz" class="form-control form-control-sm" style="width:auto;" required>
       <button type="submit" name="action" value="preview" class="btn btn-outline-secondary btn-sm btn-stack">
         <span class="ar"><i class="fi fi-rr-eye"></i> معاينة فقط</span>
         <span class="en"><i class="fi fi-rr-eye"></i> Preview only</span>
@@ -28,7 +28,7 @@
         {% endfor %}</tbody>
       </table>
       {% else %}
-      <div class="alert alert-info m-3 mb-3">Choose a KML file to preview or import.</div>
+      <div class="alert alert-info m-3 mb-3">Choose a KML or KMZ file to preview or import.</div>
       {% endif %}
     </div>
   </div>
