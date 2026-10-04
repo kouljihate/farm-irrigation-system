@@ -49,7 +49,7 @@
             <th><span class="en">Discharge (L/s)</span> / <span class="ar">التصرّف</span></th>
             <th><span class="en">Notes</span> / <span class="ar">ملاحظات</span></th>
             <th><span class="en">Rev</span> / <span class="ar">نسخة</span></th>
-            <th class="text-center" style="width:170px;">
+            <th class="text-center" style="width:100px;">
               <span class="en">Actions</span> / <span class="ar">إجراءات</span>
             </th>
           </tr>
@@ -102,7 +102,9 @@
             {# -------- last column: edit + remove -------- #}
             <td class="text-center text-nowrap">
               <button type="button"
-                      class="btn btn-sm btn-outline-primary js-source-edit"
+                      class="btn btn-sm btn-outline-primary action-icon-btn"
+                      title="Edit"
+                      aria-label="Edit"
                       data-bs-toggle="modal" data-bs-target="#sourceModal"
                       data-collection="{{ s.collection }}"
                       data-orig-name="{{ s.name }}"
@@ -117,7 +119,7 @@
                       data-width="{{ s.width if s.width else '' }}"
                       data-discharge="{{ s.discharge if s.discharge else '' }}"
                       data-notes="{{ s.notes }}">
-                <span class="en">✏️ Edit</span><span class="ar">✏️ تعديل</span>
+                <i class="fi fi-rr-pencil"></i>
               </button>
 
               <form method="post" action="{{ url_for('project.water') }}"
@@ -125,7 +127,8 @@
                 <input type="hidden" name="action" value="delete_source">
                 <input type="hidden" name="collection" value="{{ s.collection }}">
                 <input type="hidden" name="name" value="{{ s.name }}">
-                <button type="button" class="btn btn-sm btn-outline-danger"
+                <button type="button" class="btn btn-sm btn-outline-danger action-icon-btn"
+                        title="Remove" aria-label="Remove"
                         data-confirm
                         data-confirm-method="POST"
                         data-confirm-en="Remove {{ s.name }} ({{ t.label_en if t else s.source_type }})? Any piping built from it must be rebuilt."
@@ -134,7 +137,7 @@
                         data-confirm-title-ar="حذف المصدر"
                         data-confirm-ok-en="Remove"
                         data-confirm-ok-ar="حذف"
-                        data-confirm-danger>🗑</button>
+                        data-confirm-danger><i class="fi fi-rr-trash"></i></button>
               </form>
             </td>
           </tr>
