@@ -219,7 +219,7 @@
 {% block scripts %}
 <script>window.FARM_API = {geojson:"{{ url_for('api.geojson') }}", bounds:"{{ url_for('api.bounds') }}", geometryBase:"{{ url_for('api.update_geometry', collection='COLLECTION', object_id='OBJECT_ID') }}"};</script>
 <script>window.FARM_MAP_CONFIG = {containerId:"sectors-map", statusId:"map-status", autoLoad:false};</script>
-<script src="{{ url_for('static', filename='js/map.js', v='13') }}"></script>
+<script src="{{ url_for('static', filename='js/map.js', v='14') }}"></script>
 <script>
 (function () {
   "use strict";
