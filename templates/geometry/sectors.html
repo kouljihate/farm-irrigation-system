@@ -173,17 +173,33 @@
       <span class="en">Current sectors</span><span class="ar">القطاعات الحالية</span>
       <span id="sector-count" class="text-muted small">{{ sectors|length }}</span>
     </div>
-      <div class="side-body">
-        <div class="zone-chips" id="sector-chips">
-          {% for s in sectors %}
-          <div class="zone-chip" data-sector="{{ s.code }}">
-            <span class="js-chip-name">{{ s.code }}</span>
-            <span class="area">{{ "%.1f"|format(s.area_m2) }} m²</span>
-          </div>
-          {% endfor %}
-        </div>
+    <div class="side-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0 sectors-current-table">
+          <thead>
+            <tr>
+              <th class="text-center" style="width:34px;">
+                <input type="checkbox" id="sector-side-select-all" title="Select all sectors">
+              </th>
+              <th><span class="en">Sector</span><span class="ar">القطاع</span></th>
+              <th class="text-end"><span class="en">Area</span><span class="ar">المساحة</span></th>
+            </tr>
+          </thead>
+          <tbody id="current-sectors-body">
+            {% for s in sectors %}
+            <tr data-sector="{{ s.code }}">
+              <td class="text-center">
+                <input type="checkbox" class="js-current-sector-select" value="{{ s.code }}" aria-label="Select {{ s.code }}">
+              </td>
+              <td><strong>{{ s.code }}</strong></td>
+              <td class="text-end num">{{ "%.1f"|format(s.area_m2) }} m²</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
+  </div>
   </aside>
 
 </div>
@@ -344,15 +360,15 @@
   }
 
   function refreshSelectionUI() {
-    document.querySelectorAll("#sector-chips .zone-chip").forEach(chip => {
-      const code = chip.getAttribute("data-sector");
-      const selected = selectedSectors.has(code);
-      chip.classList.toggle("selected", selected);
-      chip.style.boxShadow = selected ? "0 0 0 3px rgba(13,110,253,.35)" : "none";
-    });
-    document.querySelectorAll(".js-sector-select").forEach(cb => {
+    document.querySelectorAll(".js-sector-select, .js-current-sector-select").forEach(cb => {
       cb.checked = selectedSectors.has(cb.value);
       cb.closest("tr")?.classList.toggle("sector-row-selected", cb.checked);
+    });
+    document.querySelectorAll("#sector-select-all, #sector-side-select-all").forEach(master => {
+      const all = document.querySelectorAll(".js-sector-select").length;
+      const selected = document.querySelectorAll(".js-sector-select:checked").length;
+      master.checked = all > 0 && selected === all;
+      master.indeterminate = selected > 0 && selected < all;
     });
     updateActionButtons();
   }
@@ -520,8 +536,8 @@
     map.pm.setGlobalOptions({snappable: true, snapDistance: 20});
     map.pm.addControls({
       position: "topleft",
-      drawMarker: false, drawCircleMarker: false, drawPolyline: false,
-      drawRectangle: false, drawPolygon: false, drawCircle: false, drawText: false,
+      drawMarker: true, drawCircleMarker: false, drawPolyline: true,
+      drawRectangle: false, drawPolygon: true, drawCircle: false, drawText: false,
       editMode: true, dragMode: true, cutPolygon: false, removalMode: false, rotateMode: false
     });
   } else {
@@ -575,31 +591,23 @@
       });
   }
 
-  // -------- chips: colour + click-to-zoom + hover highlight --------
+  // -------- Current Sectors table: hover + click-to-zoom --------
   function paintChips() {
-    document.querySelectorAll("#sector-chips .zone-chip").forEach(chip => {
-      if (chip.dataset.wired === "1") return;   // save -> loadAll -> paintChips: don't stack listeners
-      chip.dataset.wired = "1";
-      const code = chip.getAttribute("data-sector");
-      const col  = sectorColor(code);
-      chip.style.background = col + "22";   // ~13% opacity fill
-      chip.style.borderColor = col;
-      chip.style.color = "#212529";
-      chip.style.cursor = "pointer";
-
-      chip.addEventListener("mouseenter", () => {
+    document.querySelectorAll("#current-sectors-body tr[data-sector]").forEach(row => {
+      if (row.dataset.wired === "1") return;
+      row.dataset.wired = "1";
+      const code = row.dataset.sector;
+      row.addEventListener("mouseenter", () => {
         const rec = sectorIndex[code];
         if (rec) rec.poly.setStyle({ weight: 4 });
       });
-      chip.addEventListener("mouseleave", () => {
+      row.addEventListener("mouseleave", () => {
         const rec = sectorIndex[code];
         if (rec) rec.poly.setStyle({ weight: 2 });
       });
-      chip.addEventListener("click", (e) => {
-        const additive = !!(e.ctrlKey || e.metaKey || e.shiftKey);
-        setSectorSelected(code, !selectedSectors.has(code), additive);
+      row.addEventListener("dblclick", () => {
         const rec = sectorIndex[code];
-        if (rec) map.fitBounds(rec.bounds, { padding: [24, 24] });
+        if (rec) map.fitBounds(rec.bounds, {padding: [24,24]});
       });
     });
   }
@@ -624,15 +632,16 @@
   window.addEventListener("resize", refreshMapSize);
 
   // -------- table multi-selection --------
-  document.querySelectorAll(".js-sector-select").forEach(cb => {
+  document.querySelectorAll(".js-sector-select, .js-current-sector-select").forEach(cb => {
     cb.addEventListener("change", () => setSectorSelected(cb.value, cb.checked, true));
   });
-  document.getElementById("sector-select-all")?.addEventListener("change", e => {
-    document.querySelectorAll(".js-sector-select").forEach(cb => { cb.checked = e.target.checked; });
+  function selectAllSectors(checked) {
     selectedSectors.clear();
-    if (e.target.checked) document.querySelectorAll(".js-sector-select").forEach(cb => selectedSectors.add(cb.value));
+    if (checked) document.querySelectorAll(".js-sector-select").forEach(cb => selectedSectors.add(cb.value));
     refreshSelectionUI();
-  });
+  }
+  document.getElementById("sector-select-all")?.addEventListener("change", e => selectAllSectors(e.target.checked));
+  document.getElementById("sector-side-select-all")?.addEventListener("change", e => selectAllSectors(e.target.checked));
 
   // ================= coordinate editor (unchanged behaviour) =================
   function parseCoords(text) {
