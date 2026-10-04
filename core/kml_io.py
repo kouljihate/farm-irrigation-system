@@ -1,5 +1,8 @@
-"""Read KML into Python dicts; write Python dicts out to KML."""
+"""Read KML/KMZ into Python dicts; write Python dicts out to KML."""
 from __future__ import annotations
+
+import zipfile
+from pathlib import Path
 
 from lxml import etree
 
@@ -11,8 +14,27 @@ def qn(tag: str) -> str:
 
 
 def read_kml(path: str) -> dict:
-    """Return dict {placemark_name: {'kind': ..., 'coords': [...]}}."""
-    root = etree.parse(path).getroot()
+    """Return dict {placemark_name: {'kind': ..., 'coords': [...]}}.
+
+    Accepts both plain .kml XML files and .kmz ZIP archives containing KML.
+    """
+    path = Path(path)
+    if path.suffix.lower() == ".kmz":
+        with zipfile.ZipFile(path, "r") as archive:
+            kml_names = [
+                name for name in archive.namelist()
+                if name.lower().endswith(".kml") and not name.endswith("/")
+            ]
+            if not kml_names:
+                raise ValueError("KMZ archive does not contain a KML file.")
+            kml_name = next(
+                (name for name in kml_names if name.lower() == "doc.kml"),
+                kml_names[0],
+            )
+            root = etree.fromstring(archive.read(kml_name))
+    else:
+        root = etree.parse(str(path)).getroot()
+
     out: dict = {}
     for pm in root.iter(qn("Placemark")):
         n = pm.find(qn("name"))
