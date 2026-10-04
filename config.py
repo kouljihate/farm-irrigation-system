@@ -31,15 +31,15 @@ class PathsConfig(BaseModel):
 
 class AppConfig(BaseModel):
     title: str = "Farm Irrigation Workbench"
-    version: str = "1.0.0"
+    version: str = "2.3.0"
 
 
 class DefaultsConfig(BaseModel):
     row_spacing_m: float = Field(default=4.0, gt=0)
     tree_spacing_m: float = Field(default=4.0, gt=0)
     first_row_offset_m: float = Field(default=2.0, ge=0)
-    pipe_main_diameter_mm: int = Field(default=75, gt=0)
-    pipe_submain_diameter_mm: int = Field(default=32, gt=0)
+    pipe_main_diameter_mm: int = Field(default=90, gt=0)
+    pipe_submain_diameter_mm: int = Field(default=63, gt=0)
     mainline_offset_m: float = Field(default=5.0, ge=0)
     submain_offset_m: float = Field(default=5.0, ge=0)
     emitter_spacing_m: float = Field(default=0.5, gt=0)
@@ -148,7 +148,7 @@ class Config:
     # Engineering assumptions for the design checks (core/hydraulics.py)
     HYDRAULICS = _yaml.get("hydraulics", {})
 
-    # MapHub server-side integration
+    # Legacy MapHub settings retained for backward-compatible configuration only
     MAPHUB_API_KEY = os.environ.get("MAPHUB_API_KEY", "")
     MAPHUB_BASE_URL = os.environ.get("MAPHUB_BASE_URL", "https://maphub.net")
     MAPHUB_EMBED_BASE_URL = os.environ.get(
