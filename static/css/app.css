@@ -1905,7 +1905,7 @@ input[type="reset"]:hover::after {
 body:has(#sectors-map) .sector-draw-toolbar {
   position: absolute;
   z-index: 500;
-  top: 10px;
+  bottom: 10px;
   left: 10px;
   display: flex;
   flex-direction: column;
