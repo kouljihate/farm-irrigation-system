@@ -47,7 +47,7 @@
 {% elif request.endpoint in ['project.initial', 'project.water', 'project.settings', 'project.checks'] %}
 <ul class="nav nav-tabs pt-2">
   <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='project.initial' %}active{% endif %}" href="{{ url_for('project.initial') }}"><span class="ar">التهيئة</span><span class="en">Initialize</span></a></li>
-  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='project.water' %}active{% endif %}" href="{{ url_for('project.water') }}"><span class="ar">المصدر والحوض</span><span class="en">Water & Basin</span></a></li>
+  <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='project.water' %}active{% endif %}" href="{{ url_for('project.water') }}"><span class="ar">مصدر المياه</span><span class="en">Water Source</span></a></li>
   <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='project.settings' %}active{% endif %}" href="{{ url_for('project.settings') }}"><span class="ar">الإعدادات</span><span class="en">Settings</span></a></li>
   <li class="nav-item"><a class="nav-link bi {% if request.endpoint=='project.checks' %}active{% endif %}" href="{{ url_for('project.checks') }}"><span class="ar">فحوصات</span><span class="en">Checks</span></a></li>
 </ul>
