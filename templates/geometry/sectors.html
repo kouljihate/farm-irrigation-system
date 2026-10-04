@@ -55,8 +55,6 @@
         </label>
       </div>
 
-      <button class="map-fit-btn" id="fit-btn" type="button" title="Fit map" aria-label="Fit map">⌖</button>
-      <span id="map-summary" class="map-summary">— sectors</span>
       <span id="sector-selection-summary" class="map-selection-summary">0 selected</span>
     </div>
 
@@ -514,9 +512,6 @@
     Object.keys(sectorIndex).forEach(k => delete sectorIndex[k]);
   }
 
-  function setSummary(n) {
-    document.getElementById("map-summary").textContent = n + " sectors on map";
-  }
 
   function renderFeatures(features) {
     mapErrors.length = 0;
@@ -644,7 +639,6 @@
     e.target.checked ? map.addLayer(layers.water) : map.removeLayer(layers.water);
   });
 
-  document.getElementById("fit-btn").addEventListener("click", fitToBounds);
 
   // Leaflet needs a size refresh after the workspace layout is painted.
   window.addEventListener("resize", refreshMapSize);
