@@ -1,1930 +1,847 @@
-/* =========================================================
-   Farm Irrigation Workbench — styles
-   ========================================================= */
+{% extends "base.html" %}
+{% block content %}
 
+<h1 class="h3 workspace-title bi">
+  <span class="en">Sectors</span>
+  <span class="ar">القطاعات</span>
+</h1>
 
-/* =========================================================
-   GLOBAL BUTTON STANDARD
-   - rounded corners everywhere
-   - bilingual buttons: Arabic top, English bottom
-   - table actions: compact icon-only circles
-   ========================================================= */
-.btn,
-button,
-input[type="button"],
-input[type="submit"],
-input[type="reset"] {
-  border-radius: 10px !important;
-}
+<div class="workspace">
 
-.btn:not(.icon-only):not(.btn-close):has(.ar):has(.en) {
-  display: inline-flex !important;
-  flex-direction: column !important;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  line-height: 1.05;
-  text-align: center;
-}
+  {# ================= LEFT: toolbar of map actions, then map, then the
+     coordinate editor (the sector-specific tool) ================= #}
+  <div class="workspace-main">
+    <div class="map-header">
+      <div class="map-header-actions" aria-label="Sector actions">
+        <button class="map-action-btn btn-outline-primary" id="sector-add" type="button" title="Add sector">
+          <span class="map-action-label"><span class="ar">إضافة</span><span class="en">Add</span></span><span class="map-action-icon">➕</span>
+        </button>
+        <button class="map-action-btn btn-outline-secondary" id="sector-rename" type="button" title="Rename sector">
+          <span class="map-action-label"><span class="ar">إعادة تسمية</span><span class="en">Rename</span></span><span class="map-action-icon">✎</span>
+        </button>
+        <button class="map-action-btn btn-outline-danger" id="sector-remove" type="button" title="Remove sector">
+          <span class="map-action-label"><span class="ar">حذف</span><span class="en">Remove</span></span><span class="map-action-icon">🗑️</span>
+        </button>
+        <button class="map-action-btn btn-outline-secondary" id="sector-swap" type="button" title="Swap sectors">
+          <span class="map-action-label"><span class="ar">تبديل</span><span class="en">Swap</span></span><span class="map-action-icon">⇄</span>
+        </button>
+        <button class="map-action-btn btn-outline-secondary" id="sector-split" type="button" title="Split sector">
+          <span class="map-action-label"><span class="ar">تقسيم</span><span class="en">Split</span></span><span class="map-action-icon">✂</span>
+        </button>
+        <button class="map-action-btn btn-outline-secondary" id="sector-merge" type="button" title="Merge sectors">
+          <span class="map-action-label"><span class="ar">دمج</span><span class="en">Merge</span></span><span class="map-action-icon">⊕</span>
+        </button>
+        <button class="map-action-btn btn-success" id="sector-smart-create" type="button" title="Smart Create">
+          <span class="map-action-label"><span class="ar">إنشاء ذكي</span><span class="en">Smart Create</span></span><span class="map-action-icon">✨</span>
+        </button>
+      </div>
 
-.btn:not(.icon-only):has(.ar):has(.en) .ar {
-  order: 1;
-  display: block;
-  font-family: var(--font-ar);
-  direction: rtl;
-  text-align: center;
-  font-size: 0.86em;
-  font-weight: 700;
-  white-space: nowrap;
-}
+      <div class="map-header-layers" aria-label="Map layers">
+        <label class="map-check">
+          <input type="checkbox" id="layer-property" checked>
+          <span class="map-check-label"><span class="ar">الملكية</span><span class="en">Property</span></span>
+        </label>
+        <label class="map-check">
+          <input type="checkbox" id="layer-water" checked>
+          <span class="map-check-label"><span class="ar">الماء</span><span class="en">Water</span></span>
+        </label>
+        <label class="map-check">
+          <input type="checkbox" id="layer-sectors" checked>
+          <span class="map-check-label"><span class="ar">القطاعات</span><span class="en">Sectors</span></span>
+        </label>
+        <label class="map-check">
+          <input type="checkbox" id="layer-zones" checked>
+          <span class="map-check-label"><span class="ar">المناطق</span><span class="en">Zones</span></span>
+        </label>
+      </div>
 
-.btn:not(.icon-only):has(.ar):has(.en) .en {
-  order: 2;
-  display: block;
-  font-family: var(--font-en);
-  direction: ltr;
-  text-align: center;
-  font-size: 0.62em;
-  opacity: 0.85;
-  white-space: nowrap;
-}
+      <button class="map-fit-btn" id="fit-btn" type="button" title="Fit map" aria-label="Fit map">⌖</button>
+      <span id="map-summary" class="map-summary">— sectors</span>
+      <span id="sector-selection-summary" class="map-selection-summary">0 selected</span>
+    </div>
 
-/* Prevent anonymous leading icon/text nodes from becoming a third row. */
-.btn-stack {
-  min-height: 42px;
-  border-radius: 10px !important;
-}
+    <div id="sectors-map" class="workspace-map"></div>
 
-/* Every action button inside a table is an icon-only circle. */
-.table td .btn,
-.table th .btn,
-.table .row-actions .btn {
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  min-height: 38px !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  line-height: 1 !important;
-  font-size: 0 !important;
-  vertical-align: middle;
-}
+    <div class="workspace-toolbar">
+      <span class="title bi">
+        <span class="en">Edit coordinates</span><span class="ar">تحرير الإحداثيات</span>
+      </span>
+    </div>
 
-.table td .btn .en,
-.table td .btn .ar,
-.table th .btn .en,
-.table th .btn .ar,
-.table .row-actions .btn .en,
-.table .row-actions .btn .ar {
-  display: none !important;
-}
+    {% if sectors %}
+    <div class="workspace-body">
+    <p class="text-muted small mb-3 bi">
+      <span class="en">Edit coordinates below (one <code>lon,lat</code> per line). Area and vertex count update live. Click <strong>Save</strong> to commit.</span>
+      <span class="ar">حرر الإحداثيات بالأسفل (سطر لكل <code>lon,lat</code>). يتم تحديث المساحة وعدد النقاط فورياً. اضغط <strong>حفظ</strong> للتثبيت.</span>
+    </p>
 
-.table td .btn::before,
-.table th .btn::before,
-.table .row-actions .btn::before {
-  font-size: 1.05rem;
-  line-height: 1;
-}
+    <table class="sectors-table">
+      <thead>
+        <tr>
+          <th style="width:42px;">
+            <input type="checkbox" id="sector-select-all" title="Select all sectors">
+          </th>
+          <th style="width:70px;">Code</th>
+          <th>Coordinates (lon,lat per line)</th>
+          <th style="width:130px;">Metrics</th>
+          <th style="width:150px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sectors %}
+        <tr data-code="{{ s.code }}">
+          <td class="sector-select-cell"><input type="checkbox" class="js-sector-select" value="{{ s.code }}" aria-label="Select {{ s.code }}"></td>
+          <td class="sector-code">{{ s.code }}</td>
 
-.table td .btn.js-save::before,
-.table .row-actions .btn.js-save::before { content: "💾"; }
-.table td .btn.js-revert::before,
-.table .row-actions .btn.js-revert::before { content: "↩"; }
-.table td .js-source-edit::before { content: "✏️"; }
-.table td [data-confirm]::before { content: "🗑️"; }
-.table td .btn[type="submit"]::before { content: "💾"; }
+          <td>
+            <textarea class="coords-box js-coords" spellcheck="false">{{ s.coords_text }}</textarea>
+          </td>
 
-/* ---------- Comfortaa ---------- */
-@font-face {
-  font-family: 'Comfortaa';
-  src: url('/static/fonts/Comfortaa-Light.ttf') format('truetype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Comfortaa';
-  src: url('/static/fonts/Comfortaa-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Comfortaa';
-  src: url('/static/fonts/Comfortaa-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+          <td>
+            <div class="metrics">
+              <div class="metric-pill">
+                <span class="label">Verts</span>
+                <span class="value js-verts">{{ s.vertices }}</span>
+              </div>
+              <div class="metric-pill">
+                <span class="label">m²</span>
+                <span class="value js-area-m2">{{ "%.1f"|format(s.area_m2) }}</span>
+              </div>
+              <div class="metric-pill">
+                <span class="label">ha</span>
+                <span class="value js-area-ha">{{ "%.4f"|format(s.area_m2 / 10000) }}</span>
+              </div>
+            </div>
+          </td>
 
-/* ---------- VIP RAWY ---------- */
-@font-face {
-  font-family: 'VIP RAWY Regular';
-  src: url('/static/fonts/VIP-Rawy-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'VIP RAWY Regular';
-  src: url('/static/fonts/VIP-Raw-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-sm btn-success js-save" type="button">
+                <span class="en">💾 Save</span><span class="ar">حفظ</span>
+              </button>
+              <button class="btn btn-sm btn-outline-secondary js-revert" type="button">
+                <span class="en">↺ Revert</span><span class="ar">تراجع</span>
+              </button>
+              <div class="save-msg js-msg"></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
 
-/* ---------- tokens ---------- */
-:root {
-  --font-en: 'Comfortaa', system-ui, sans-serif;
-  --font-ar: 'VIP RAWY Regular', 'Comfortaa', system-ui, sans-serif;
-  --header-h: 68px;
-  --footer-h: 56px;
-  --sidebar-w: 240px;
-  --brand-green: #2D6A4F;
-  --brand-green-dark: #1B4332;
-  --brand-green-light: #f1f8f5;
-  --brand-green-border: #cfe6dd;
-  --brand-green-hover: #d8efe6;
-}
+    {% else %}
+    <div class="workspace-body">
+    <div class="empty-state bi">
+      <div>
+        <div class="en">No sectors found. Run Step 01 first.</div>
+        <div class="ar">لا توجد قطاعات. نفذ الخطوة 01 أولاً.</div>
+      </div>
+    </div>
+    </div>
+    {% endif %}
+  </div>
 
-/* ---------- fonts everywhere ---------- */
-html, body {
-  font-family: var(--font-en), var(--font-ar);
-  background: #f6f8fa;
-  font-size: 15px;
-  height: 100%;
-}
-input, button, select, textarea, optgroup {
-  font-family: inherit;
-  font-size: inherit;
-}
-h1, h2, h3, h4, h5, h6,
-p, span, div, a, li, td, th, label, small, strong, em,
-.btn, .badge, .card, .card-header, .card-body,
-.alert, .form-control, .form-label,
-.table, .table th, .table td,
-pre, code {
-  font-family: inherit;
-}
+  {# ================= RIGHT: metrics + current sectors ================= #}
+  <aside class="workspace-side">
+    <div class="side-title bi">
+      <span class="en">Sector metrics</span><span class="ar">قياسات القطاعات</span>
+    </div>
+    <div class="side-body">
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Sectors</span><strong>{{ sectors|length }}</strong>
+      </div>
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Total area (m²)</span>
+        <strong>{{ "%.1f"|format(sectors|sum(attribute='area_m2')) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">Total area (ha)</span>
+        <strong>{{ "%.4f"|format(sectors|sum(attribute='area_m2') / 10000) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between py-2">
+        <span class="text-muted">Average (m²)</span>
+        <strong>{{ "%.1f"|format(sectors|sum(attribute='area_m2') / sectors|length) if sectors else 0 }}</strong>
+      </div>
 
-/* ---------- bilingual helpers ---------- */
-.en { font-family: var(--font-en); direction: ltr; text-align: left; unicode-bidi: embed; }
-.ar { font-family: var(--font-ar); direction: rtl; text-align: right; unicode-bidi: embed; font-size: 1.05em; }
-.bi { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; }
-.bi .en { flex: 1 1 auto; }
-.bi .ar { flex: 0 0 auto; }
-code, pre, .num { direction: ltr; unicode-bidi: embed; font-family: 'Comfortaa', monospace; }
+      <div class="zones-status" id="map-status"></div>
+    </div>
 
-/* ---------- fixed header/footer layout ---------- */
-body {
-  padding-top: var(--header-h);
-  padding-bottom: var(--footer-h);
-  overflow-x: hidden;
-}
+    <div id="sector-list-card" {% if not sectors %}style="display:none;"{% endif %}>
+    <div class="side-title border-top static bi">
+      <span class="en">Current sectors</span><span class="ar">القطاعات الحالية</span>
+      <span id="sector-count" class="text-muted small">{{ sectors|length }}</span>
+    </div>
+      <div class="side-body">
+        <div class="zone-chips" id="sector-chips">
+          {% for s in sectors %}
+          <div class="zone-chip" data-sector="{{ s.code }}">
+            <span class="js-chip-name">{{ s.code }}</span>
+            <span class="area">{{ "%.1f"|format(s.area_m2) }} m²</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </aside>
 
-.app-header {
-  position: fixed; top: 0; left: 0; right: 0;
-  height: var(--header-h);
-  z-index: 1030;
-  background: var(--brand-green);
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-.app-header .app-title { font-weight: 700; font-size: 2.25rem; color: #fff; text-decoration: none; margin: 0; }
-.app-header .app-title:hover { color: #e9f7ef; text-decoration: none; }
-.app-header .form-control {
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.3);
-  color: #fff;
-}
-.app-header .form-control::placeholder { color: rgba(255,255,255,0.75); }
-.app-header .form-control:focus {
-  background: rgba(255,255,255,0.25);
-  color: #fff;
-  border-color: #fff;
-  box-shadow: none;
-}
+</div>
 
-.app-footer {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  height: var(--footer-h);
-  z-index: 1030;
-  background: #f8f9fa;
-  border-top: 1px solid #dee2e6;
-  color: #495057;
-  display: flex;
-  align-items: center;
-}
-.app-footer .row { width: 100%; }
-.app-footer code { background: transparent; color: var(--brand-green); padding: 0; }
+{% endblock %}
 
-.app-main { min-height: calc(100vh - var(--header-h) - var(--footer-h)); }
+{% block scripts %}
+<script>window.FARM_API = {geojson:"{{ url_for('api.geojson') }}", bounds:"{{ url_for('api.bounds') }}", geometryBase:"{{ url_for('api.update_geometry', collection='COLLECTION', object_id='OBJECT_ID') }}"};</script>
+<script>window.FARM_MAP_CONFIG = {containerId:"sectors-map", statusId:"map-status"};</script>
+<script src="{{ url_for('static', filename='js/map.js', v='13') }}"></script>
+<script>
+(function () {
+  "use strict";
 
-/* =========================================================
-   SECTION NAVIGATION — horizontal, centered, bilingual
-   ========================================================= */
-.app-section-nav {
-  background: #ffffff;
-  border-bottom: 1px solid #dee2e6;
-  padding: 0.6rem 1rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
+  const API = {
+    geojson: "{{ url_for('api.geojson') }}",
+    bounds:  "{{ url_for('api.bounds') }}",
+    save:    "{{ url_for('geometry.save_sector') }}",
+    add:     "{{ url_for('geometry.add_sector') }}",
+    remove:  "{{ url_for('geometry.delete_sectors') }}",
+    rename:  "{{ url_for('geometry.rename_sector') }}",
+    swap:    "{{ url_for('geometry.swap_sectors') }}",
+    split:   "{{ url_for('geometry.split_sector') }}",
+    merge:   "{{ url_for('geometry.merge_sectors') }}",
+    smart:   "{{ url_for('geometry.smart_create_sectors') }}"
+  };
 
-.section-nav-list {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: center !important;
-  align-items: stretch;
-  gap: 0.6rem;
-  list-style: none;
-  padding: 0;
-  margin: 0 auto;
-  flex-wrap: wrap;
-}
-.section-nav-list > li { display: inline-flex; }
+  const R = 6378137.0;
+  const M_PER_DEG_LAT = Math.PI * R / 180.0;
 
-.section-nav-btn {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center;
-  justify-content: center;
-  min-width: 130px;
-  padding: 0.55rem 1.1rem;
-  border-radius: 10px;
-  text-decoration: none;
-  color: var(--brand-green);
-  background: var(--brand-green-light);
-  border: 1px solid var(--brand-green-border);
-  transition: background 0.15s, color 0.15s, transform 0.1s;
-  line-height: 1.15;
-  text-align: center;
-}
-.section-nav-btn:hover {
-  background: var(--brand-green-hover);
-  color: var(--brand-green-dark);
-  transform: translateY(-1px);
-  text-decoration: none;
-}
-.section-nav-btn.active {
-  background: var(--brand-green);
-  color: #ffffff;
-  border-color: var(--brand-green);
-  box-shadow: 0 2px 6px rgba(45,106,79,0.35);
-}
-.section-nav-btn .ar {
-  font-family: var(--font-ar);
-  direction: rtl;
-  font-size: 1.35rem;
-  font-weight: 700;
-  margin-bottom: 2px;
-  display: block;
-}
-.section-nav-btn .en {
-  font-family: var(--font-en);
-  direction: ltr;
-  font-size: 0.7rem;
-  font-weight: 400;
-  opacity: 0.85;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: block;
-}
-.section-nav-btn.active .en { opacity: 0.95; }
+  // ================= map (mirrors geometry/zones.html) =================
+  const sharedMap = window.FARM_MAP_INSTANCE;
+  if (!sharedMap) throw new Error("Shared Farm Map failed to initialize");
+  const map = sharedMap.map;
+  const layers = {
+    property: sharedMap.layers.property,
+    water: sharedMap.layers.water_points,
+    sectors: sharedMap.layers.sectors,
+    zones: sharedMap.layers.zones
+  };
 
-/* ---------- sub-tabs ---------- */
-.nav-tabs {
-  justify-content: center !important;
-  border-bottom: 1px solid #dee2e6;
-}
-.nav-tabs .nav-link.bi {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center;
-  line-height: 1.15;
-  padding: 0.4rem 1rem;
-}
-.nav-tabs .nav-link.bi .ar {
-  font-family: var(--font-ar);
-  font-size: 1.15rem;
-  font-weight: 600;
-  margin-bottom: 1px;
-}
-.nav-tabs .nav-link.bi .en {
-  font-family: var(--font-en);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  opacity: 0.75;
-}
-.nav-tabs .nav-link.bi.active .en { opacity: 0.95; }
+  const colors = {
+    property: "#000000"
+  };
 
-/* ---------- stacked header buttons ---------- */
-.btn-stack {
-  display: inline-flex !important;
-  flex-direction: column !important;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0.7rem;
-  line-height: 1.1;
-  text-align: center;
-}
-.btn-stack .ar {
-  font-family: var(--font-ar);
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-.btn-stack .en {
-  font-family: var(--font-en);
-  font-size: 0.6rem;
-  font-weight: 400;
-  opacity: 0.85;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
+  /* Per-sector base palette (8 distinct hues) — same as zones.html so a
+     sector keeps its colour when you move between the two pages. */
+  const SECTOR_PALETTE = {
+    S1: { base: "#00897b", name: "teal"    },
+    S2: { base: "#f9a825", name: "amber"   },
+    S3: { base: "#7e57c2", name: "violet"  },
+    S4: { base: "#43a047", name: "green"   },
+    S5: { base: "#e53935", name: "red"     },
+    S6: { base: "#1e88e5", name: "blue"    },
+    S7: { base: "#fb8c00", name: "orange"  },
+    S8: { base: "#d81b60", name: "pink"    }
+  };
 
-/* ---------- misc ---------- */
-.navbar-brand { font-weight: 600; }
-.card { box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #e3e6ea; }
-.card-header { font-weight: 600; font-size: 0.95rem; background: #f0f3f6; }
-.table-sm td, .table-sm th { font-size: 0.85rem; }
-pre { white-space: pre-wrap; word-break: break-all; }
-#map { z-index: 1; }
+  /* Lightness offsets per zone index — Z1 darker, Z2 mid, Z3 lighter */
+  const ZONE_SHADE = { 1: -18, 2: 0, 3: 22 };
 
-/* =========================================================
-   LAYOUT WRAPPER — sidebar + main
-   ========================================================= */
-.app-layout {
-  display: flex;
-  align-items: stretch;
-  min-height: calc(100vh - var(--header-h) - var(--footer-h));
-  width: 100%;
-}
-
-.app-layout > .app-main {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* =========================================================
-   SIDEBAR — auto-hide on desktop
-   ========================================================= */
-
-.app-sidebar {
-  width: var(--sidebar-w);
-  flex: 0 0 var(--sidebar-w);
-  min-width: var(--sidebar-w);
-  max-width: var(--sidebar-w);
-  background: #f8fafb;
-  border-right: 1px solid #e3e6ea;
-  padding: 0.75rem 0.5rem;
-  overflow-y: auto;
-  max-height: calc(100vh - var(--header-h) - var(--footer-h));
-  position: sticky;
-  top: var(--header-h);
-  align-self: flex-start;
-  transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease, padding 0.25s ease, opacity 0.15s ease;
-}
-
-/* Collapsed state - auto-hide */
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed {
-  width: 56px;
-  min-width: 56px;
-  max-width: 56px;
-  padding: 0.5rem 0.25rem;
-}
-
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed .sidebar-section-title,
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed .sidebar-text,
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed .sidebar-nav {
-  opacity: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed .sidebar-link {
-  justify-content: center;
-  padding: 0.5rem;
-  min-height: 48px;
-}
-
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed .sidebar-icon {
-  order: 0;
-  width: 100%;
-  border-left: none;
-  border-bottom: 1px solid var(--brand-green-border);
-  background: rgba(45,106,79,0.08);
-  font-size: 1.5rem;
-  min-height: auto;
-}
-
-/* Hover to expand */
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed:hover {
-  width: var(--sidebar-w);
-  min-width: var(--sidebar-w);
-  max-width: var(--sidebar-w);
-  padding: 0.75rem 0.5rem;
-  z-index: 1050;
-  box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-}
-
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed:hover .sidebar-section-title,
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed:hover .sidebar-text,
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed:hover .sidebar-nav {
-  opacity: 1;
-  pointer-events: auto;
-  overflow: visible;
-}
-
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed:hover .sidebar-link {
-  grid-template-columns: 1fr 48px;
-  justify-content: start;
-  padding: 0.5rem 0.75rem;
-  min-height: 54px;
-}
-
-.app-layout:not(.sidebar-pinned) .app-sidebar.collapsed:hover .sidebar-icon {
-  order: 2;
-  width: 48px;
-  border-left: 1px solid var(--brand-green-border);
-  border-bottom: none;
-  background: rgba(45,106,79,0.08);
-  font-size: 2rem;
-  min-height: 100%;
-}
-
-/* Pin button */
-.sidebar-pin-btn {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid var(--brand-green-border);
-  background: #fff;
-  color: var(--brand-green);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-  opacity: 0.6;
-  transition: opacity 0.15s, background 0.15s;
-  z-index: 10;
-}
-.sidebar-pin-btn:hover {
-  opacity: 1;
-  background: var(--brand-green-light);
-}
-.sidebar-pin-btn.pinned {
-  background: var(--brand-green);
-  color: #fff;
-  border-color: var(--brand-green);
-  opacity: 1;
-}
-
-/* Position relative for pin button */
-.app-sidebar {
-  position: relative;
-}
-
-/* Mobile stays as drawer */
-@media (max-width: 992px) {
-  .app-sidebar {
-    position: fixed;
-    top: var(--header-h);
-    bottom: var(--footer-h);
-    left: 0;
-    z-index: 1040;
-    width: 260px;
-    transform: translateX(-100%);
-    transition: transform 0.22s ease;
-    box-shadow: 2px 0 12px rgba(0,0,0,0.18);
-    max-height: none;
-    min-width: 260px;
-    max-width: 260px;
-  }
-  .app-sidebar.collapsed {
-    width: 260px;
-    min-width: 260px;
-    max-width: 260px;
-  }
-  .app-sidebar.open {
-    transform: translateX(0);
-  }
-  .app-sidebar .sidebar-pin-btn { display: none; }
-}
-
-.sidebar-section {
-  margin-bottom: 1.1rem;
-}
-
-.sidebar-section-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.4rem;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid #e3e6ea;
-  margin-bottom: 0.45rem;
-}
-.sidebar-section-title .ar {
-  color: var(--brand-green);
-  font-weight: 700;
-  font-family: var(--font-ar);
-  font-size: 0.85rem;
-}
-.sidebar-section-title .en {
-  color: #6c757d;
-  font-weight: 600;
-  font-family: var(--font-en);
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-/* ---------- each button: icon right, text left ---------- */
-.sidebar-link {
-  display: grid;
-  grid-template-columns: 1fr 48px;   /* text | icon column */
-  align-items: stretch;
-  text-decoration: none;
-  color: var(--brand-green);
-  background: #ffffff;
-  border: 1px solid var(--brand-green-border);
-  border-radius: 10px;
-  overflow: hidden;
-  transition: background 0.14s, color 0.14s, transform 0.12s, box-shadow 0.12s;
-  min-height: 54px;
-  font-weight: 500;
-}
-
-.sidebar-link:hover {
-  background: var(--brand-green-hover);
-  color: var(--brand-green-dark);
-  text-decoration: none;
-  transform: translateX(2px);
-  box-shadow: 0 2px 8px rgba(45,106,79,0.12);
-}
-
-.sidebar-link.sidebar-link-danger {
-  color: #b02a37;
-  border-color: #f1aeb5;
-  background: #fff5f6;
-}
-.sidebar-link.sidebar-link-danger:hover {
-  background: #fbe9eb;
-  color: #842029;
-  box-shadow: 0 2px 8px rgba(176, 42, 55, 0.15);
-}
-
-/* --- text block (Arabic on top, English below) --- */
-.sidebar-text {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;         /* center children horizontally */
-  text-align: center;    
-  padding: 0.5rem 0.75rem;
-  min-width: 0;
-  order: 1;                  /* text column is first (left) */
-}
-
-.sidebar-ar {
-  font-family: var(--font-ar);
-  font-size: 1.15rem;
-  font-weight: 700;
-  line-height: 1.2;
-  direction: rtl;
-  text-align: center;
-  color: inherit;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebar-en {
-  font-family: var(--font-en);
-  font-size: 0.65rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  line-height: 1.2;
-  opacity: 0.72;
-  color: inherit;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 1px;
-  text-align: center; 
-}
-
-/* --- icon column (right), spans full height --- */
-.sidebar-icon {
-  order: 2;                  /* icon column is second (right) */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  line-height: 1;
-  background: rgba(45,106,79,0.08);
-  border-left: 1px solid var(--brand-green-border);
-  width: 48px;
-  min-height: 100%;
-  transition: background 0.14s;
-}
-
-.sidebar-link:hover .sidebar-icon {
-  background: rgba(45,106,79,0.16);
-}
-
-.sidebar-link.sidebar-link-danger .sidebar-icon {
-  background: rgba(176,42,55,0.08);
-  border-left-color: #f1aeb5;
-}
-.sidebar-link.sidebar-link-danger:hover .sidebar-icon {
-  background: rgba(176,42,55,0.18);
-}
-
-/* --- scrollbar (subtle) --- */
-.app-sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-.app-sidebar::-webkit-scrollbar-thumb {
-  background: #cfe6dd;
-  border-radius: 3px;
-}
-.app-sidebar::-webkit-scrollbar-thumb:hover {
-  background: #a8d5c0;
-}
-/* =========================================================
-   MOBILE
-   ========================================================= */
-@media (max-width: 992px) {
-  .app-layout { flex-direction: column; }
-
-  .app-sidebar {
-    position: fixed;
-    top: var(--header-h);
-    bottom: var(--footer-h);
-    left: 0;
-    z-index: 1040;
-    width: 260px;
-    transform: translateX(-100%);
-    transition: transform 0.22s ease;
-    box-shadow: 2px 0 12px rgba(0,0,0,0.18);
-    max-height: none;
+  /* hex #rrggbb -> hsl {h, s, l} */
+  function hexToHsl(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
   }
 
-  .app-sidebar.open {
-    transform: translateX(0);
+  function hslToHex(h, s, l) {
+    l = Math.max(0, Math.min(100, l));
+    s = Math.max(0, Math.min(100, s));
+    s /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    const toHex = x => Math.round(255 * x).toString(16).padStart(2, "0");
+    return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
   }
-}
 
-@media (max-width: 768px) {
-  :root {
-    --header-h: 96px;
-    --footer-h: 84px;
+  function sectorColor(sectorCode) {
+    const base = (SECTOR_PALETTE[sectorCode] || { base: "#607d8b" }).base;
+    return base;
   }
-  .app-header .app-title { font-size: 1rem; }
-  .section-nav-btn {
-    min-width: 100px;
-    padding: 0.45rem 0.7rem;
+
+  function zoneColor(sectorCode, zoneIndex) {
+    const hsl = hexToHsl(sectorColor(sectorCode));
+    const deltaL = ZONE_SHADE[zoneIndex] ?? 0;
+    return hslToHex(hsl.h, hsl.s, hsl.l + deltaL);
   }
-  .section-nav-btn .ar { font-size: 0.9rem; }
-  .section-nav-btn .en { font-size: 0.6rem; }
-  .btn-stack .ar { font-size: 0.75rem; }
-  .btn-stack .en { font-size: 0.55rem; }
-}
 
-/* =========================================================
-   MODAL DIALOGS — replace native confirm/alert
-   ========================================================= */
+  /* code -> {layer, bounds} so chips can zoom and highlight */
+  const sectorIndex = {};
+  const selectedSectors = new Set();
 
-#appConfirmModal .modal-content,
-#appAlertModal .modal-content {
-  border: none;
-  border-radius: 14px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
-  overflow: hidden;
-}
-
-#appConfirmModal .modal-header,
-#appAlertModal .modal-header {
-  background: var(--brand-green-light, #f1f8f5);
-  border-bottom: 1px solid var(--brand-green-border, #cfe6dd);
-  color: var(--brand-green, #2D6A4F);
-  padding: 0.75rem 1.25rem;
-}
-
-#appConfirmModal .modal-title,
-#appAlertModal .modal-title {
-  font-family: var(--font-en);
-  font-weight: 700;
-  font-size: 1.75rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.75rem;
-  width: 100%;
-}
-
-#appConfirmModal .modal-title .en,
-#appAlertModal .modal-title .en {
-  font-family: var(--font-en);
-  font-weight: 700;
-}
-
-#appConfirmModal .modal-title .ar,
-#appAlertModal .modal-title .ar {
-  font-family: var(--font-ar);
-  font-weight: 700;
-}
-
-#appConfirmModal .modal-body,
-#appAlertModal .modal-body {
-  padding: 1.1rem 1.25rem;
-  background: #ffffff;
-}
-
-#appConfirmModal .modal-body .en,
-#appConfirmModal .modal-body .ar {
-  display: block;
-  margin-bottom: 0.35rem;
-}
-
-#appConfirmModal .modal-body .en {
-  font-family: var(--font-en);
-  color: #212529;
-  font-size: 0.95rem;
-}
-
-#appConfirmModal .modal-body .ar {
-  font-family: var(--font-ar);
-  color: #495057;
-  font-size: 1rem;
-  text-align: right;
-}
-
-#appConfirmModal .modal-footer,
-#appAlertModal .modal-footer {
-  padding: 0.75rem 1.25rem;
-  border-top: 1px solid #e3e6ea;
-  background: #fafbfc;
-  gap: 0.5rem;
-}
-
-#appConfirmModal .modal-footer button,
-#appAlertModal .modal-footer button {
-  min-width: 110px;
-}
-
-/* danger variant (delete/wipe) */
-#appConfirmModal.danger .modal-header {
-  background: #f8d7da;
-  border-bottom-color: #f1aeb5;
-  color: #842029;
-}
-#appConfirmModal.danger .modal-title {
-  color: #842029;
-}
-
-/* backdrop dimmer */
-.modal-backdrop.show {
-  opacity: 0.55;
-}
-
-/* =========================================================
-   FLASH TOASTS — top right, auto-dismiss after 5s
-   ========================================================= */
-
-.flash-container {
-  position: fixed;
-  top: calc(var(--header-h) + 12px);
-  right: 16px;
-  z-index: 1060;              /* above header, sidebar, modals */
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-width: min(420px, calc(100vw - 32px));
-  pointer-events: none;       /* let clicks pass through the wrapper */
-}
-
-.flash-toast {
-  pointer-events: auto;       /* but the toast itself is clickable */
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  margin: 0;
-  border-radius: 12px;
-  border: 1px solid transparent;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  font-family: var(--font-en), var(--font-ar);
-  opacity: 0;
-  transform: translateX(24px);
-  animation: flash-in 0.28s ease-out forwards;
-}
-
-.flash-toast .flash-body {
-  flex: 1 1 auto;
-  font-size: 0.95rem;
-  line-height: 1.35;
-  word-break: break-word;
-}
-
-.flash-toast .btn-close {
-  flex: 0 0 auto;
-  padding: 0.25rem;
-  margin: 0;
-  opacity: 0.7;
-  background-size: 0.75em;
-}
-.flash-toast .btn-close:hover { opacity: 1; }
-
-/* Success */
-.flash-toast.alert-success {
-  background: #e8f5ee;
-  border-color: #b7e0c9;
-  color: #1B4332;
-}
-.flash-toast.alert-success .btn-close { filter: invert(30%) sepia(30%) saturate(500%); }
-
-/* Error / danger */
-.flash-toast.alert-danger {
-  background: #fbe9eb;
-  border-color: #f1aeb5;
-  color: #842029;
-}
-.flash-toast.alert-danger .btn-close { filter: invert(20%) sepia(60%) saturate(1500%); }
-
-/* Warning (if you ever use it) */
-.flash-toast.alert-warning {
-  background: #fff8e1;
-  border-color: #ffe69c;
-  color: #7a5b00;
-}
-
-/* Info (if you ever use it) */
-.flash-toast.alert-info {
-  background: #e7f4fb;
-  border-color: #b6e0f5;
-  color: #055160;
-}
-
-/* Entrance animation */
-@keyframes flash-in {
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  function selectedCodes() {
+    return Array.from(selectedSectors);
   }
-}
 
-/* Exit animation — added by JS right before removal */
-.flash-toast.flash-out {
-  animation: flash-out 0.25s ease-in forwards;
-}
-@keyframes flash-out {
-  to {
-    opacity: 0;
-    transform: translateX(24px);
+  const actionButtons = {
+    add: document.getElementById("sector-add"),
+    rename: document.getElementById("sector-rename"),
+    remove: document.getElementById("sector-remove"),
+    swap: document.getElementById("sector-swap"),
+    split: document.getElementById("sector-split"),
+    merge: document.getElementById("sector-merge")
+  };
+
+  function updateActionButtons() {
+    const n = selectedSectors.size;
+    actionButtons.add.disabled = n !== 0;
+    actionButtons.rename.disabled = n !== 1;
+    actionButtons.remove.disabled = n < 1;
+    actionButtons.swap.disabled = n !== 2;
+    actionButtons.split.disabled = n !== 1;
+    actionButtons.merge.disabled = n < 2;
+    const summary = document.getElementById("sector-selection-summary");
+    summary.textContent = n + " selected";
   }
-}
 
-/* Mobile: full-width top toast */
-@media (max-width: 576px) {
-  .flash-container {
-    top: calc(var(--header-h) + 8px);
-    left: 8px;
-    right: 8px;
-    max-width: none;
+  function setSectorSelected(code, selected, additive = true) {
+    if (!additive) selectedSectors.clear();
+    if (selected) selectedSectors.add(code);
+    else selectedSectors.delete(code);
+    refreshSelectionUI();
+    updateActionButtons();
   }
-}
 
-/* =========================================================
-   BOOTSTRAP TOASTS — global style tweaks
-   ========================================================= */
-
-.toast-container {
-  pointer-events: none;   /* let clicks pass through gaps */
-}
-
-.toast-container .toast {
-  pointer-events: auto;
-  min-width: 280px;
-  max-width: min(420px, calc(100vw - 32px));
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
-  font-family: var(--font-en), var(--font-ar);
-  font-size: 0.92rem;
-  padding: 0.25rem 0.25rem;
-}
-
-.toast-container .toast .d-flex {
-  padding: 0.65rem 0.85rem;
-}
-
-.toast-icon {
-  font-size: 1.15rem;
-  line-height: 1;
-  flex: 0 0 auto;
-  padding-top: 0.1rem;
-}
-
-.toast-body {
-  font-size: 0.92rem;
-  line-height: 1.35;
-  word-break: break-word;
-  padding: 0;
-  margin: 0;
-}
-
-.toast .btn-close {
-  opacity: 0.75;
-  padding: 0.35rem;
-  margin: 0;
-  background-size: 0.75em;
-}
-.toast .btn-close:hover { opacity: 1; }
-
-/* entrance / exit animation */
-.toast.showing { opacity: 0; }
-.toast.show     { opacity: 1; }
-
-/* mobile */
-@media (max-width: 576px) {
-  .toast-container {
-    left: 0.5rem;
-    right: 0.5rem;
-    top: auto;
-    bottom: calc(var(--footer-h) + 8px);
+  function wireMapSectorSelection() {
+    layers.sectors.eachLayer(layer => {
+      if (layer._sectorSelectionWired || !layer.feature) return;
+      layer._sectorSelectionWired = true;
+      const code = layer.feature.properties?.sector_code || layer.feature.properties?.name;
+      if (!code) return;
+      layer.on("click", e => {
+        L.DomEvent.stopPropagation(e);
+        const additive = !!(e.originalEvent?.ctrlKey || e.originalEvent?.metaKey || e.originalEvent?.shiftKey);
+        setSectorSelected(code, !selectedSectors.has(code), additive);
+      });
+      layer.on("dblclick", e => {
+        L.DomEvent.stopPropagation(e);
+        map.fitBounds(layer.getBounds(), {padding: [24, 24]});
+      });
+    });
   }
-  .toast-container .toast {
-    min-width: 0;
-    width: 100%;
+
+  function refreshSelectionUI() {
+    document.querySelectorAll("#sector-chips .zone-chip").forEach(chip => {
+      const code = chip.getAttribute("data-sector");
+      const selected = selectedSectors.has(code);
+      chip.classList.toggle("selected", selected);
+      chip.style.boxShadow = selected ? "0 0 0 3px rgba(13,110,253,.35)" : "none";
+    });
+    document.querySelectorAll(".js-sector-select").forEach(cb => {
+      cb.checked = selectedSectors.has(cb.value);
+      cb.closest("tr")?.classList.toggle("sector-row-selected", cb.checked);
+    });
+    updateActionButtons();
   }
-}
 
-/* =========================================================
-   WORKSPACE — shared 80/20 layout (primary content + side panel)
-   ========================================================= */
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(240px, 1fr);
-  gap: 1rem;
-  align-items: start;
-}
-@media (max-width: 992px) {
-  .workspace { grid-template-columns: 1fr; }
-}
+  function requireSelection(n, label) {
+    const codes = selectedCodes();
+    if (codes.length !== n) {
+      appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:label + ": select exactly " + n + " sector" + (n === 1 ? "" : "s") + ".", bodyAr:"يرجى اختيار العدد المطلوب من القطاعات."});
+      return null;
+    }
+    return codes;
+  }
 
-.workspace-main {
-  background: #ffffff;
-  border: 1px solid #e3e6ea;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
+  function postForm(url, fields) {
+    const fd = new FormData();
+    Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+    return fetch(url, {method: "POST", body: fd}).then(async r => {
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || "operation failed");
+      return j;
+    });
+  }
 
-.workspace-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 0.7rem;
-  background: #f0f3f6;
-  border-bottom: 1px solid #e3e6ea;
-}
-.workspace-toolbar .vr {
-  width: 1px;
-  align-self: stretch;
-  min-height: 24px;
-  background: #d5dbe1;
-  margin: 0 0.2rem;
-}
-.workspace-toolbar .title {
-  font-weight: 700;
-  color: var(--brand-green);
-  margin-right: auto;
-}
+  function runSectorOperation(url, fields, successMessage) {
+    postForm(url, fields)
+      .then(j => {
+        selectedSectors.clear();
+        if (successMessage) showStatus("ok", successMessage(j));
+        sharedMap.reload().then(() => { setTimeout(() => { wireMapSectorSelection(); paintChips(); refreshSelectionUI(); }, 100); });
+      })
+      .catch(err => showStatus("err", "⚠️ " + err.message));
+  }
 
-.workspace-body { padding: 0.9rem; }
-.workspace-body.flush { padding: 0; }
+  const mapErrors = [];
+  const statusEl = document.getElementById("map-status");
 
-.maphub-frame-wrap {
-  width: 100%;
-  height: 650px;
-  min-height: 420px;
-  background: #eef2f5;
-  overflow: hidden;
-}
-.maphub-frame-wrap iframe {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 420px;
-  border: 0;
-}
-@media (max-width: 992px) {
-  .maphub-frame-wrap { height: 420px; min-height: 420px; }
-  .maphub-frame-wrap iframe { min-height: 420px; }
-}
+  function showStatus(kind, text) {
+    statusEl.className = "zones-status " + kind;
+    statusEl.textContent = text;
+  }
 
-.workspace-map {
-  height: 650px;
-  width: 100%;
-  background: #eef2f5;
-}
-@media (max-width: 992px) {
-  .workspace-map { height: 420px; }
-}
+  function addFeature(f) {
+    const coll = f.properties.collection;
 
-.workspace-side {
-  background: #ffffff;
-  border: 1px solid #e3e6ea;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  max-height: 650px;
-  overflow: auto;
-}
-@media (max-width: 992px) {
-  .workspace-side { max-height: none; }
-}
-.workspace-side .side-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--brand-green);
-  background: #f0f3f6;
-  padding: 0.55rem 0.8rem;
-  border-bottom: 1px solid #e3e6ea;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
-  position: sticky;
-  top: 0;
-}
-.workspace-side .side-body { padding: 0.8rem; }
+    // Shared map engine renders all imported geometry except sector/zone
+    // polygons, whose page-specific styling is handled below.
+    if (coll !== "sectors" && coll !== "zones") {
+      sharedMap.addGeoJSONFeature(f);
+      return;
+    }
 
-/* second side header in the same panel — do not stick over the first */
-.workspace-side .side-title.static { position: static; }
+    const layer = layers[coll];
+    if (!layer) return;
 
-/* compact form styling for parameters that live in the side panel */
-.workspace-side label.form-label {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 0.25rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.4rem;
-}
-.workspace-side .form-control {
-  border-color: #cfe6dd;
-  font-size: 0.9rem;
-}
-.workspace-side .form-control:focus {
-  border-color: var(--brand-green);
-  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.15);
-}
-.workspace-side .split-title {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-}
-.workspace-side .split-desc { font-size: 0.68rem; }
+    const g = f.geometry;
+    const name = f.properties.name || "";
 
-/* ---------- zones page: build status + zone chips ---------- */
-.zones-status {
-  margin-top: 0.75rem;
-  padding: 0.55rem 0.7rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  display: none;
-}
-.zones-status.ok   { display: block; background: #e8f5ee; color: #1B4332; border: 1px solid #b7e0c9; }
-.zones-status.err  { display: block; background: #fbe9eb; color: #842029; border: 1px solid #f1aeb5; }
-.zones-status.busy { display: block; background: #e7f4fb; color: #055160; border: 1px solid #b6e0f5; }
+    if (coll === "water_points") {
+      if (g.type === "Point") {
+        const marker = L.circleMarker([g.coordinates[1], g.coordinates[0]], {
+          radius: 7, color: "#0d6efd", fillColor: "#0d6efd", fillOpacity: 0.85, weight: 2
+        }).bindTooltip(name || "Water");
+        layers.water.addLayer(marker);
+      }
+      return;
+    }
 
-.zone-chips {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.zone-chip {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.4rem;
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
-  background: #f1f8f5;
-  border: 1px solid #cfe6dd;
-  font-size: 0.8rem;
-}
-.zone-chip.z1 { background: #e8f5ee; border-color: #b7e0c9; color: #1B4332; }
-.zone-chip.z2 { background: #fff4e5; border-color: #ffd8a5; color: #7a4b00; }
-.zone-chip.z3 { background: #e7f4fb; border-color: #b6e0f5; color: #055160; }
-.zone-chip .area { font-family: ui-monospace, monospace; font-size: 0.76rem; }
+    if (coll === "basins") {
+      if (g.type === "Polygon") {
+        const latlngs = g.coordinates[0].map(c => [c[1], c[0]]);
+        const basin = L.polygon(latlngs, {
+          color: "#0d6efd", weight: 2, fillColor: "#0d6efd", fillOpacity: 0.18
+        }).bindTooltip(name || "Basin");
+        layers.water.addLayer(basin);
+      }
+      return;
+    }
 
-/* ---------- page title used by every workspace page ---------- */
-.workspace-title {
-  font-weight: 700;
-  color: var(--brand-green);
-  margin-bottom: 1rem;
-}
+    if (g.type === "Polygon") {
+      const latlngs = g.coordinates[0].map(c => [c[1], c[0]]);
+      let color = colors[coll];
+      let fillOpacity = 0.05;
+      let weight = 2;
 
-/* =========================================================
-   AUTH / ERROR — centered single card (matches workspace card)
-   ========================================================= */
-.auth-shell {
-  display: flex;
-  justify-content: center;
-  padding: 1rem 0;
-}
-.auth-card {
-  width: 100%;
-  max-width: 440px;
-  background: #ffffff;
-  border: 1px solid #e3e6ea;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-.auth-card-head {
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: var(--brand-green);
-  background: #f0f3f6;
-  border-bottom: 1px solid #e3e6ea;
-  padding: 0.6rem 0.9rem;
-}
-.auth-card-body { padding: 1.1rem; }
-.auth-card .btn-stack { width: 100%; }
+      if (coll === "zones") {
+        const sector = f.properties.sector_code || "";
+        color = zoneColor(sector, f.properties.zone_index || 1);
+        fillOpacity = 0.35;
+        weight = 1.5;
+      } else if (coll === "sectors") {
+        color = sectorColor(f.properties.sector_code || name);
+        fillOpacity = 0.15;
+        weight = 2;
+      }
 
-/* ---------- split method picker ---------- */
-.split-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
+      const poly = L.polygon(latlngs, {
+        color, weight, fillColor: color, fillOpacity
+      }).bindTooltip(name);
+      poly.feature = f;
+      poly.pmIgnore = false;
+      layer.addLayer(poly);
 
-.split-option {
-  position: relative;
-  cursor: pointer;
-  margin: 0;
-}
+      if (coll === "sectors") {
+        const code = f.properties.sector_code || name;
+        sectorIndex[code] = { poly, bounds: poly.getBounds() };
+      }
+    }
+  }
 
-.split-option input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
+  /* Add one feature, isolating failures so a single bad geometry can't
+     silently abort the whole render loop. */
+  function tryAddFeature(f) {
+    try {
+      addFeature(f);
+      return true;
+    } catch (err) {
+      const where = (f.properties && (f.properties.name || f.properties.collection)) || "feature";
+      mapErrors.push(where + ": " + (err && err.message ? err.message : String(err)));
+      return false;
+    }
+  }
 
-.split-card {
-  display: grid;
-  grid-template-columns: 34px 1fr;
-  gap: 0.6rem;
-  align-items: center;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid #cfe6dd;
-  border-radius: 9px;
-  background: #fbfffd;
-  transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
-}
+  function clearLayers() {
+    Object.values(layers).forEach(g => g.clearLayers());
+    Object.keys(sectorIndex).forEach(k => delete sectorIndex[k]);
+  }
 
-.split-option:hover .split-card {
-  border-color: #2D6A4F;
-  background: #f1f8f5;
-}
+  function setSummary(n) {
+    document.getElementById("map-summary").textContent = n + " sectors on map";
+  }
 
-.split-option input:checked + .split-card {
-  border-color: #2D6A4F;
-  background: #e8f5ee;
-  box-shadow: 0 0 0 3px rgba(45,106,79,0.15);
-}
+  function renderFeatures(features) {
+    mapErrors.length = 0;
+    let expected = 0, drawn = 0;
+    features.forEach(f => {
+      const isSector = f.properties && f.properties.collection === "sectors";
+      if (isSector) expected += 1;
+      if (tryAddFeature(f) && isSector) drawn += 1;
+    });
+    setSummary(drawn);
+    document.getElementById("sector-count").textContent = drawn;
 
-.split-icon {
-  font-size: 1.4rem;
-  text-align: center;
-  color: #2D6A4F;
-}
+    const card = document.getElementById("sector-list-card");
+    card.style.display = drawn ? "" : "none";
 
-.split-text { min-width: 0; }
+    if (expected) {
+      if (drawn === expected) {
+        showStatus("ok", "✔ " + drawn + " sectors on map");
+      } else {
+        showStatus("err", "⚠️ " + drawn + "/" + expected + " sectors drawn on map. " +
+                   mapErrors.slice(0, 3).join("; "));
+      }
+    }
+    return { expected, drawn };
+  }
 
-.split-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #2D6A4F;
-  margin-bottom: 2px;
-}
-.split-title .ar { font-family: var(--font-ar); }
-.split-title .en { font-family: var(--font-en); }
+  function fitToBounds() {
+    fetch(API.bounds)
+      .then(r => r.json())
+      .then(d => { if (d.bounds) map.fitBounds(d.bounds, { padding: [20, 20] }); });
+  }
 
-.split-desc {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.72rem;
-  line-height: 1.25;
-  color: #6c757d;
-}
-.split-desc .ar { font-family: var(--font-ar); direction: rtl; text-align: right; }
-.split-desc .en { font-family: var(--font-en); }
-/* =========================================================
-   OVERVIEW (index)
-   ========================================================= */
-/* =========================================================
-   OVERVIEW — bilingual, responsive, with map
-   ========================================================= */
+  // Geoman is optional at startup: the map must still render if the CDN is unavailable.
+  if (map.pm) {
+    map.pm.setGlobalOptions({snappable: true, snapDistance: 20});
+    map.pm.addControls({
+      position: "topleft",
+      drawMarker: false, drawCircleMarker: false, drawPolyline: false,
+      drawRectangle: false, drawPolygon: false, drawCircle: false, drawText: false,
+      editMode: true, dragMode: true, cutPolygon: false, removalMode: false, rotateMode: false
+    });
+  } else {
+    console.warn("Leaflet-Geoman is not available; map editing controls are disabled.");
+  }
 
-.overview-wrapper {
-  width: 100%;
-  max-width: 100%;
-}
+  async function saveGeomanLayer(layer) {
+    const p = layer.feature && layer.feature.properties;
+    if (!p || !p.id || !p.collection) return;
+    const url = "{{ url_for('api.update_geometry', collection='COLLECTION', object_id='OBJECT_ID') }}"
+      .replace("COLLECTION", encodeURIComponent(p.collection))
+      .replace("OBJECT_ID", encodeURIComponent(p.id));
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({geometry: layer.toGeoJSON().geometry})
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error(result.error || "geometry save failed");
+  }
 
-.overview-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
-  font-weight: 700;
-  color: #2D6A4F;
-  margin-bottom: 1rem;
-}
+  map.on("pm:editend", e => saveGeomanLayer(e.layer).catch(err => showStatus("err", "⚠️ " + err.message)));
+  map.on("pm:dragend", e => saveGeomanLayer(e.layer).catch(err => showStatus("err", "⚠️ " + err.message)));
 
-/* ---------- MAP ---------- */
-.overview-map-controls {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
+  function refreshMapSize() {
+    window.requestAnimationFrame(() => {
+      map.invalidateSize(true);
+      window.setTimeout(() => map.invalidateSize(true), 200);
+    });
+  }
+  window.addEventListener("load", refreshMapSize);
+  window.addEventListener("resize", refreshMapSize);
 
-.overview-map-controls button {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.65rem;
-}
+  // -------- load everything --------
+  function loadAll() {
+    clearLayers();
+    fetch(API.geojson)
+      .then(r => {
+        if (!r.ok) throw new Error("GeoJSON API returned HTTP " + r.status);
+        return r.json();
+      })
+      .then(fc => {
+        renderFeatures(fc.features || []);
+        refreshMapSize();
+        fitToBounds();
+        window.setTimeout(refreshMapSize, 300);
+      })
+      .catch(err => {
+        console.error("load failed:", err);
+        showStatus("err", "⚠️ Map data failed to load: " + err.message);
+      });
+  }
 
-/* the map box itself is styled by .workspace-map (shared with /map and /geometry/zones) */
+  // -------- chips: colour + click-to-zoom + hover highlight --------
+  function paintChips() {
+    document.querySelectorAll("#sector-chips .zone-chip").forEach(chip => {
+      if (chip.dataset.wired === "1") return;   // save -> loadAll -> paintChips: don't stack listeners
+      chip.dataset.wired = "1";
+      const code = chip.getAttribute("data-sector");
+      const col  = sectorColor(code);
+      chip.style.background = col + "22";   // ~13% opacity fill
+      chip.style.borderColor = col;
+      chip.style.color = "#212529";
+      chip.style.cursor = "pointer";
 
-/* ---------- metric cards ---------- */
-.overview-cards {
-  display: grid !important;
-  grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
-  gap: 0.6rem !important;
-  width: 100% !important;
-  margin: 0 0 1.25rem 0 !important;
-  padding: 0 !important;
-  list-style: none;
-}
+      chip.addEventListener("mouseenter", () => {
+        const rec = sectorIndex[code];
+        if (rec) rec.poly.setStyle({ weight: 4 });
+      });
+      chip.addEventListener("mouseleave", () => {
+        const rec = sectorIndex[code];
+        if (rec) rec.poly.setStyle({ weight: 2 });
+      });
+      chip.addEventListener("click", (e) => {
+        const additive = !!(e.ctrlKey || e.metaKey || e.shiftKey);
+        setSectorSelected(code, !selectedSectors.has(code), additive);
+        const rec = sectorIndex[code];
+        if (rec) map.fitBounds(rec.bounds, { padding: [24, 24] });
+      });
+    });
+  }
 
-.overview-cards > .overview-card {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  border: 1px solid #e3e6ea;
-  border-radius: 10px;
-  padding: 0.85rem 0.5rem;
-  text-align: center;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  transition: transform 0.12s, box-shadow 0.12s;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
-}
+  // -------- layer toggles --------
+  document.getElementById("layer-property").addEventListener("change", e => {
+    e.target.checked ? map.addLayer(layers.property) : map.removeLayer(layers.property);
+  });
+  document.getElementById("layer-sectors").addEventListener("change", e => {
+    e.target.checked ? map.addLayer(layers.sectors) : map.removeLayer(layers.sectors);
+  });
+  document.getElementById("layer-zones").addEventListener("change", e => {
+    e.target.checked ? map.addLayer(layers.zones) : map.removeLayer(layers.zones);
+  });
+  document.getElementById("layer-water").addEventListener("change", e => {
+    e.target.checked ? map.addLayer(layers.water) : map.removeLayer(layers.water);
+  });
 
-.overview-cards > .overview-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(45,106,79,0.12);
-}
+  document.getElementById("fit-btn").addEventListener("click", fitToBounds);
 
-.overview-card-icon { font-size: 1.4rem; line-height: 1; margin-bottom: 0.25rem; }
-.overview-card-value {
-  font-size: clamp(1.2rem, 2.2vw, 1.8rem);
-  font-weight: 700;
-  color: #2D6A4F;
-  line-height: 1.1;
-}
-.overview-card-labels {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  margin-top: 0.3rem;
-  font-size: 0.72rem;
-  width: 100%;
-}
-.overview-card-labels .en { color: #495057; font-weight: 500; }
-.overview-card-labels .ar { color: #6c757d; font-size: 0.78rem; }
+  // Leaflet needs a size refresh after the workspace layout is painted.
+  window.addEventListener("resize", refreshMapSize);
 
-@media (max-width: 1400px) {
-  .overview-cards { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
-}
-@media (max-width: 1100px) {
-  .overview-cards { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-}
-@media (max-width: 768px) {
-  .overview-cards { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-}
-@media (max-width: 500px) {
-  .overview-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  .overview-title { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-}
+  // -------- table multi-selection --------
+  document.querySelectorAll(".js-sector-select").forEach(cb => {
+    cb.addEventListener("change", () => setSectorSelected(cb.value, cb.checked, true));
+  });
+  document.getElementById("sector-select-all")?.addEventListener("change", e => {
+    document.querySelectorAll(".js-sector-select").forEach(cb => { cb.checked = e.target.checked; });
+    selectedSectors.clear();
+    if (e.target.checked) document.querySelectorAll(".js-sector-select").forEach(cb => selectedSectors.add(cb.value));
+    refreshSelectionUI();
+  });
 
-/* ---------- actions ---------- */
-.overview-actions {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-@media (min-width: 768px) {
-  .overview-actions { grid-template-columns: 1fr 1fr !important; }
-}
-.overview-action-card .list-group-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-}
-.overview-action-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-}
-.overview-action-item .ar {
-  color: #6c757d;
-  font-size: 0.9em;
-}
+  // ================= coordinate editor (unchanged behaviour) =================
+  function parseCoords(text) {
+    const out = [];
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.trim();
+      if (!line) continue;
+      const parts = line.split(",").map(s => s.trim());
+      if (parts.length < 2) continue;
+      const lon = parseFloat(parts[0]);
+      const lat = parseFloat(parts[1]);
+      if (!isFinite(lon) || !isFinite(lat)) continue;
+      out.push([lon, lat]);
+    }
+    return out;
+  }
 
-/* ---------- alert ---------- */
-.overview-alert {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-.overview-alert .en,
-.overview-alert .ar { display: block; }
+  // Shoelace area in m² (lat-corrected)
+  function ringAreaM2(ring) {
+    if (ring.length < 3) return 0;
+    const r = ring.slice();
+    if (r[0][0] !== r[r.length - 1][0] || r[0][1] !== r[r.length - 1][1]) {
+      r.push(r[0]);
+    }
+    let latSum = 0;
+    for (const p of r) latSum += p[1];
+    const lat0 = latSum / r.length;
+    const mPerDegLon = M_PER_DEG_LAT * Math.cos(lat0 * Math.PI / 180);
 
-/* ---------- empty-state ---------- */
-.overview-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 420px;
-  background: #f8f9fa;
-  border: 2px dashed #cfe6dd;
-  border-radius: 12px;
-  color: #6c757d;
-  text-align: center;
-  padding: 1.5rem;
-  margin-bottom: 1.25rem;
-}
-.overview-empty .icon {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
-  opacity: 0.7;
-}
-.overview-empty .en { font-weight: 600; color: #2D6A4F; margin-bottom: 0.25rem; }
-.overview-empty .ar { color: #6c757d; margin-bottom: 0.75rem; }
+    let s = 0;
+    for (let i = 0; i < r.length - 1; i++) {
+      const x1 = r[i][0] * mPerDegLon, y1 = r[i][1] * M_PER_DEG_LAT;
+      const x2 = r[i + 1][0] * mPerDegLon, y2 = r[i + 1][1] * M_PER_DEG_LAT;
+      s += x1 * y2 - x2 * y1;
+    }
+    return Math.abs(s) / 2;
+  }
 
-/* ---------- inside the shared 80/20 workspace ---------- */
-.workspace-main > .overview-actions { margin: 0; padding: 0.9rem; }
-.workspace-main > .overview-empty { margin: 0; border-radius: 0; border-width: 0; }
-.workspace-side .overview-cards {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  margin: 0 !important;
-}
-.workspace-side .overview-alert { font-size: 0.8rem; }
+  function updateMetrics(row) {
+    const ta = row.querySelector(".js-coords");
+    const ring = parseCoords(ta.value);
 
-/* =========================================================
-   SECTORS table + metrics
-   ========================================================= */
-.sectors-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
+    // count vertices excluding duplicate closing point
+    let verts = ring.length;
+    if (ring.length > 1 &&
+        ring[0][0] === ring[ring.length - 1][0] &&
+        ring[0][1] === ring[ring.length - 1][1]) {
+      verts -= 1;
+    }
 
-.sectors-table th,
-.sectors-table td {
-  padding: 0.75rem 0.85rem;
-  border-bottom: 1px solid #e3e6ea;
-  vertical-align: top;
-  font-size: 0.88rem;
-}
+    const area = ringAreaM2(ring);
 
-.sectors-table th {
-  background: #f0f3f6;
-  font-weight: 600;
-  color: #2D6A4F;
-  text-transform: uppercase;
-  font-size: 0.72rem;
-  letter-spacing: 0.5px;
-}
+    row.querySelector(".js-verts").textContent   = verts;
+    row.querySelector(".js-area-m2").textContent = area.toFixed(1);
+    row.querySelector(".js-area-ha").textContent = (area / 10000).toFixed(4);
+  }
 
-.sectors-table tr:last-child td { border-bottom: none; }
-.sectors-table tr:hover td { background: #fafdfb; }
+  function setMsg(row, text, isError) {
+    const el = row.querySelector(".js-msg");
+    el.textContent = text;
+    el.classList.remove("ok", "err");
+    el.classList.add(isError ? "err" : "ok");
+    if (!isError) {
+      setTimeout(() => { el.textContent = ""; }, 3000);
+    }
+  }
 
-.sector-code {
-  font-weight: 700;
-  color: #2D6A4F;
-  font-size: 1rem;
-  padding-top: 0.9rem !important;
-}
+  // wire up every row
+  document.querySelectorAll("tr[data-code]").forEach(row => {
+    const ta = row.querySelector(".js-coords");
+    const saveBtn = row.querySelector(".js-save");
+    const revertBtn = row.querySelector(".js-revert");
 
-.coords-box {
-  width: 100%;
-  min-height: 200px;
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 0.75rem;
-  line-height: 1.35;
-  border: 1px solid #cfe6dd;
-  border-radius: 8px;
-  padding: 0.5rem 0.6rem;
-  background: #fbfffd;
-  resize: vertical;
-  direction: ltr;
-  text-align: left;
-}
-.coords-box:focus {
-  outline: none;
-  border-color: #2D6A4F;
-  box-shadow: 0 0 0 3px rgba(45,106,79,0.15);
-}
+    // live update on typing
+    ta.addEventListener("input", () => updateMetrics(row));
 
-.metrics {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 110px;
+    // initial metrics
+    updateMetrics(row);
+
+    // save
+    saveBtn.addEventListener("click", async () => {
+      const code = row.getAttribute("data-code");
+      const fd = new FormData();
+      fd.append("code", code);
+      fd.append("coords", ta.value);
+
+      try {
+        const r = await fetch(API.save, { method: "POST", body: fd });
+        const j = await r.json();
+        if (!j.ok) {
+          setMsg(row, "❌ " + (j.error || "save failed"), true);
+          return;
+        }
+        // update metrics from server response
+        row.querySelector(".js-verts").textContent   = j.vertices;
+        row.querySelector(".js-area-m2").textContent = j.area_m2.toFixed(1);
+        row.querySelector(".js-area-ha").textContent = j.area_ha.toFixed(4);
+        setMsg(row, "✔ Saved", false);
+        sharedMap.reload().then(() => { window.setTimeout(() => { wireMapSectorSelection(); paintChips(); refreshSelectionUI(); }, 100); });
+        window.setTimeout(paintChips, 0);
+      } catch (e) {
+        setMsg(row, "❌ " + e.message, true);
+      }
+    });
+
+    // revert = reload the page (which re-reads the DB)
+    revertBtn.addEventListener("click", () => {
+      appConfirm({titleEn:"Discard changes", titleAr:"تجاهل التغييرات", bodyEn:"Discard unsaved changes and reload?", bodyAr:"هل تريد تجاهل التغييرات غير المحفوظة وإعادة تحميل الصفحة؟", onOk:() => window.location.reload()});
+    });
+  });
+
+  // -------- sector toolbar actions --------
+  document.getElementById("sector-add").addEventListener("click", () => {
+    appPrompt({titleEn:"Add sector", titleAr:"إضافة قطاع", labelEn:"Sector code (optional)", labelAr:"رمز القطاع (اختياري)", value:"",
+      onOk: code => appPrompt({titleEn:"Sector geometry", titleAr:"هندسة القطاع", labelEn:"Polygon coordinates — one lon,lat per line", labelAr:"إحداثيات المضلع — خط لكل lon,lat", multiline:true, value:"",
+        onOk: coords => { if (coords.trim()) runSectorOperation(API.add, {code:code.trim(), coords}, j => "✔ Added " + j.code); }
+      })
+    });
+  });
+
+  document.getElementById("sector-rename").addEventListener("click", () => {
+    const codes = requireSelection(1, "Rename");
+    if (!codes) return;
+    appPrompt({titleEn:"Rename sector", titleAr:"إعادة تسمية القطاع", labelEn:"New sector code", labelAr:"رمز القطاع الجديد", value:codes[0],
+      onOk: next => { next = next.trim(); if (!next) return; runSectorOperation(API.rename, {code: codes[0], new_code: next}, j => "✔ Renamed to " + j.code); }
+    });
+  });
+
+  document.getElementById("sector-remove").addEventListener("click", () => {
+    const codes = selectedCodes();
+    if (!codes.length) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select at least one sector.", bodyAr:"يرجى اختيار قطاع واحد على الأقل."}); return; }
+    appConfirm({titleEn:"Remove sectors", titleAr:"حذف القطاعات", bodyEn:"Remove " + codes.join(", ") + "? Dependent zones/valves will be removed.", bodyAr:"حذف " + codes.join(", ") + "؟ سيتم حذف المناطق والصمامات التابعة.", danger:true,
+      onOk: () => runSectorOperation(API.remove, {codes: codes.join(","), cascade: "1"},
+      j => "✔ Removed " + j.removed + " sector(s)"));
+  });
+
+  document.getElementById("sector-swap").addEventListener("click", () => {
+    const codes = requireSelection(2, "Swap");
+    if (!codes) return;
+    runSectorOperation(API.swap, {first: codes[0], second: codes[1]},
+      () => "✔ Swapped sector identities");
+  });
+
+  document.getElementById("sector-split").addEventListener("click", () => {
+    const codes = requireSelection(1, "Split");
+    if (!codes) return;
+    appPrompt({titleEn:"Split sector", titleAr:"تقسيم القطاع", labelEn:"Number of parts (2–10)", labelAr:"عدد الأجزاء (2–10)", value:"2",
+      onOk: rawParts => {
+        const parts = parseInt(rawParts || "2", 10);
+        if (!Number.isInteger(parts) || parts < 2 || parts > 10) return;
+        appPrompt({titleEn:"Split mode", titleAr:"طريقة التقسيم", labelEn:"Mode: contour, fan, or strip", labelAr:"الطريقة: محيط، مروحة، أو شريط", value:"contour",
+          onOk: mode => runSectorOperation(API.split, {code: codes[0], parts, split_mode: mode || "contour"},
+            j => "✔ Split " + j.source + " into " + j.parts)
+        });
+      }
+    });
+  });
+
+  document.getElementById("sector-merge").addEventListener("click", () => {
+    const codes = selectedCodes();
+    if (codes.length < 2) { appAlert({titleEn:"Selection required", titleAr:"الاختيار مطلوب", bodyEn:"Select at least two sectors.", bodyAr:"يرجى اختيار قطاعين على الأقل."}); return; }
+    appConfirm({titleEn:"Merge sectors", titleAr:"دمج القطاعات", bodyEn:"Merge " + codes.join(", ") + "?", bodyAr:"هل تريد دمج " + codes.join(", ") + "؟",
+      onOk: () => runSectorOperation(API.merge, {codes: codes.join(","), cascade: "1"},
+      j => "✔ Merged into " + j.code));
+  });
+
+  document.getElementById("sector-smart-create").addEventListener("click", () => {
+    appConfirm({titleEn:"Smart Create", titleAr:"الإنشاء الذكي", bodyEn:"Smart Create will replace existing sectors and clear derived zones, valves and pipes. Continue?", bodyAr:"سيستبدل الإنشاء الذكي القطاعات الحالية ويحذف المناطق والصمامات والأنابيب المشتقة. متابعة؟",
+      onOk: () => runSectorOperation(API.smart, {}, j =>
+      "✔ Smart Create: " + j.sectors + " sectors (" + j.strategy + ")"));
+  });
+
+  // -------- initial load --------
+  window.addEventListener("farm-map-loaded", () => {
+    wireMapSectorSelection();
+    paintChips();
+    refreshSelectionUI();
+  });
+  refreshMapSize();
+  window.setTimeout(() => {
+    wireMapSectorSelection();
+    paintChips();
+    refreshSelectionUI();
+  }, 250);
+})();
+</script>
+{% endblock %}
+/* Compact drawing controls on the left side of Geometry maps. */
+#sectors-map .leaflet-pm-toolbar {
+  transform: scale(0.82);
+  transform-origin: top left;
 }
-.metric-pill {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
-  background: #f1f8f5;
-  border: 1px solid #cfe6dd;
-  border-radius: 8px;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.8rem;
+#sectors-map .leaflet-pm-toolbar .leaflet-buttons-control-button {
+  width: 32px;
+  height: 32px;
 }
-.metric-pill .label {
+.sectors-current-table thead th {
   font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: #6c757d;
-}
-.metric-pill .value {
-  font-weight: 700;
-  color: #2D6A4F;
-  font-family: ui-monospace, monospace;
-}
-
-.row-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 130px;
-}
-.row-actions button {
   white-space: nowrap;
 }
-
-.save-msg {
+.sectors-current-table td {
   font-size: 0.72rem;
-  margin-top: 0.25rem;
-  min-height: 1em;
+  padding: 0.28rem 0.35rem;
 }
-.save-msg.ok  { color: #198754; }
-.save-msg.err { color: #dc3545; }
-
-.empty-state {
-  padding: 2rem;
-  text-align: center;
-  background: #f8f9fa;
-  border-radius: 12px;
-  color: #6c757d;
-}
-
-/* =========================================================
-   WATER sources table
-   ========================================================= */
-#sources-table th, #sources-table td { white-space: nowrap; }
-#sources-table td.small { white-space: normal; min-width: 140px; }
-#sources-table .badge { font-size: 0.78rem; }
-.js-basin-only { display: none; }
-
-/* =========================================================
-   SECTION NAV
-   ========================================================= */
-.section-nav-btn.disabled {
-  pointer-events: none;
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-
-/* Sector multi-selection */
-.map-selection-summary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  min-width: 70px;
-  font-size: 0.65rem;
-  color: #495057;
-  white-space: nowrap;
-}
-.sector-select-cell { text-align: center; vertical-align: middle !important; }
-.js-sector-select, #sector-select-all { width: 13px; height: 13px; margin: 0; cursor: pointer; }
-.sectors-table tr.sector-row-selected td { background: #eef7f2 !important; }
-.map-action-btn:disabled { opacity: 0.38; cursor: not-allowed; filter: grayscale(0.25); transform: none !important; }
-
-/* =========================================================
-   GEOMETRY MAP HEADER
-   - left: seven sector action buttons
-   - right: four layer checkboxes
-   - action buttons: text block on the left, icon block on the right
-   ========================================================= */
-.map-header {
-  display: flex;
-  align-items: stretch;
-  gap: 0.75rem;
-  padding: 0.55rem 0.7rem;
-  background: #f0f3f6;
-  border-bottom: 1px solid #e3e6ea;
-  min-width: 0;
-}
-
-.map-header-actions {
-  display: flex;
-  align-items: stretch;
-  gap: 0.4rem;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.map-action-btn {
-  display: grid !important;
-  grid-template-columns: minmax(72px, 1fr) 42px;
-  align-items: stretch;
-  min-width: 118px;
-  min-height: 48px;
-  padding: 0 !important;
-  border: 1px solid currentColor;
-  border-radius: 10px !important;
-  background: #fff;
-  overflow: hidden;
-  text-decoration: none;
-}
-
-.map-action-btn .map-action-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: 0.25rem 0.45rem;
-  text-align: center;
-  line-height: 1.05;
-}
-
-.map-action-btn .map-action-label .ar {
-  order: 1;
-  display: block;
-  font-family: var(--font-ar);
-  font-size: 0.88rem;
-  font-weight: 700;
-  direction: rtl;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.map-action-btn .map-action-label .en {
-  order: 2;
-  display: block;
-  font-family: var(--font-en);
-  font-size: 0.62rem;
-  opacity: 0.78;
-  direction: ltr;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.map-action-btn .map-action-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-left: 1px solid currentColor;
-  background: rgba(45,106,79,0.07);
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.map-action-btn:hover .map-action-icon {
-  background: rgba(45,106,79,0.14);
-}
-
-.map-header-layers {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(82px, 1fr));
-  align-items: stretch;
-  gap: 0.35rem;
-  flex: 0 0 auto;
-  min-width: 350px;
-}
-
-.map-check {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
+.sectors-current-table input[type="checkbox"] {
+  width: 12px;
+  height: 12px;
   margin: 0;
-  padding: 0.25rem 0.4rem;
-  border: 1px solid #cfe6dd;
-  border-radius: 10px;
-  background: #fff;
-  cursor: pointer;
-  text-align: center;
 }
-
-.map-check input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+.sectors-current-table tr.sector-row-selected td {
+  background: #eef7f2 !important;
 }
-
-.map-check-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.05;
-}
-
-.map-check-label .ar {
-  font-family: var(--font-ar);
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.map-check-label .en {
-  font-family: var(--font-en);
-  font-size: 0.58rem;
-  opacity: 0.75;
-  text-align: center;
-}
-
-.map-check:has(input:checked) {
-  background: #e8f5ee;
-  border-color: var(--brand-green);
-  color: var(--brand-green-dark);
-  box-shadow: inset 0 0 0 1px var(--brand-green);
-}
-
-.map-fit-btn {
-  flex: 0 0 44px;
-  align-self: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid #adb5bd;
-  border-radius: 50% !important;
-  background: #fff;
-  color: #495057;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.35rem;
-  cursor: pointer;
-}
-
-.map-fit-btn:hover {
-  background: #f8f9fa;
-  color: var(--brand-green);
-}
-
-.map-summary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  min-width: 86px;
-  font-size: 0.68rem;
-  color: #6c757d;
-  white-space: nowrap;
-}
-
-@media (max-width: 1200px) {
-  .map-header { flex-wrap: wrap; }
-  .map-header-actions { flex: 1 1 100%; overflow-x: auto; }
-  .map-header-layers { flex: 1 1 auto; min-width: 0; }
-}
-
-@media (max-width: 768px) {
-  .map-header-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .map-action-btn { min-width: 0; width: 100%; }
-  .map-header-layers { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .map-fit-btn { margin-left: auto; }
-  .map-summary { margin-left: auto; }
-}
-
-
-/* =========================================================
-   GLOBAL ACTION BUTTON DESIGN — application default
-   - same split design as Geometry/Sectors action buttons
-   - text block on the left: Arabic above English
-   - icon block on the right
-   - table buttons remain circular icon-only
-   ========================================================= */
-
-.btn:not(.btn-close):not(.icon-only):not(.table .btn),
-input[type="button"]:not(.table input),
-input[type="submit"]:not(.table input),
-input[type="reset"]:not(.table input) {
-  display: grid !important;
-  grid-template-columns: minmax(88px, 1fr) 42px;
-  align-items: stretch;
-  min-width: 118px;
-  min-height: 48px;
-  padding: 0 !important;
-  border-radius: 10px !important;
-  overflow: hidden;
-  line-height: 1.05;
-  text-align: center;
-}
-
-.app-btn-label {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: 0.25rem 0.5rem;
-  text-align: center;
-  line-height: 1.05;
-}
-
-.app-btn-label .ar {
-  order: 1;
-  display: block;
-  font-family: var(--font-ar);
-  font-size: 0.88rem;
-  font-weight: 700;
-  direction: rtl;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.app-btn-label .en {
-  order: 2;
-  display: block;
-  font-family: var(--font-en);
-  font-size: 0.62rem;
-  opacity: 0.78;
-  direction: ltr;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.app-btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-left: 1px solid currentColor;
-  background: rgba(45,106,79,0.07);
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.btn:hover .app-btn-icon,
-input[type="button"]:hover::after,
-input[type="submit"]:hover::after,
-input[type="reset"]:hover::after {
-  background: rgba(45,106,79,0.14);
-}
-
-/* Compact variant keeps the same visual language. */
-.btn-sm:not(.btn-close):not(.icon-only) {
-  min-height: 42px;
-  min-width: 108px;
-  grid-template-columns: minmax(76px, 1fr) 36px;
-}
-
-.btn-sm .app-btn-label .ar {
-  font-size: 0.78rem;
-}
-
-.btn-sm .app-btn-label .en {
-  font-size: 0.56rem;
-}
-
-.btn-sm .app-btn-icon {
-  font-size: 1rem;
-}
-
-/* Never apply the split layout to table action buttons. */
-.table td .btn,
-.table th .btn,
-.table .row-actions .btn {
-  display: inline-flex !important;
-  grid-template-columns: none !important;
-}
-
-/* Geometry header keeps its dedicated, identical split design. */
-.map-action-btn {
-  border-radius: 8px !important;
-  min-width: 96px;
-  min-height: 38px;
-  grid-template-columns: minmax(58px, 1fr) 32px;
-}
-.map-action-btn .map-action-label { padding: 0.15rem 0.3rem; }
-.map-action-btn .map-action-label .ar { font-size: 0.70rem; }
-.map-action-btn .map-action-label .en { font-size: 0.50rem; }
-.map-action-btn .map-action-icon { font-size: 0.95rem; }
-
-/* Smaller layer checkboxes in the Geometry header. */
-.map-header-layers {
-  grid-template-columns: repeat(4, minmax(56px, 1fr));
-  min-width: 248px;
-  gap: 0.25rem;
-}
-
-.map-check {
-  min-height: 30px;
-  padding: 0.1rem 0.25rem;
-  border-radius: 7px;
-}
-.map-check::before {
-  content: "";
-  width: 11px;
-  height: 11px;
-  border: 1px solid #adb5bd;
-  border-radius: 3px;
-  margin-right: 4px;
-  flex: 0 0 11px;
-}
-.map-check:has(input:checked)::before {
-  background: var(--brand-green);
-  border-color: var(--brand-green);
-  box-shadow: inset 0 0 0 2px #fff;
-}
-
-.map-check-label .ar {
-  font-size: 0.68rem;
-}
-
-.map-check-label .en {
-  font-size: 0.48rem;
-}
-
-@media (max-width: 1200px) {
-  .map-header-layers {
-    min-width: 248px;
-  }
-}
-
-/* Flaticon UIcons application standard */
-.fi { display:inline-flex; align-items:center; justify-content:center; line-height:1; vertical-align:middle; }
-.app-btn-icon .fi { font-size:1.15rem; }
-.btn-sm .app-btn-icon .fi { font-size:1rem; }
-.sidebar-icon .fi { font-size:1.45rem; }
-.map-action-icon .fi { font-size:1.2rem; }
-.map-fit-btn .fi, .sidebar-pin-btn .fi { font-size:1.15rem; }
-.table td .btn .app-table-icon, .table th .btn .app-table-icon, .table .row-actions .btn .app-table-icon { font-size:1.05rem; line-height:1; }
-.flaticon-attribution { font-size:.62rem; opacity:.55; white-space:nowrap; }
-.flaticon-attribution a { color:inherit; }
