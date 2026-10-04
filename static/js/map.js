@@ -89,6 +89,26 @@
         geom.coordinates[0].map(c => [c[1], c[0]]),
         style
       );
+    } else if (geom.type === "MultiPolygon") {
+      layer = L.polygon(
+        geom.coordinates.map(polygon => polygon[0].map(c => [c[1], c[0]])),
+        style
+      );
+    } else if (geom.type === "MultiLineString") {
+      layer = L.polyline(
+        geom.coordinates.map(line => line.map(c => [c[1], c[0]])),
+        style
+      );
+    } else if (geom.type === "MultiPoint") {
+      layer = L.featureGroup(
+        geom.coordinates.map(c => L.circleMarker([c[1], c[0]], {
+          radius: coll === "trees" ? 2 : 5,
+          color: style.color,
+          fillColor: style.color,
+          fillOpacity: 0.85,
+          weight: 1
+        }))
+      );
     } else {
       return;
     }
